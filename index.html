@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Астрофото</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a1a1a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PashAstro">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui','sans-serif']}}}};</script>
+  <style>
+    html,body{background:#000} body{min-height:100dvh}.scrollbar-hide,.scrollbar-none{scrollbar-width:none}.scrollbar-hide::-webkit-scrollbar,.scrollbar-none::-webkit-scrollbar{display:none}
+    .safe-bottom{padding-bottom:calc(7.5rem + env(safe-area-inset-bottom))}.nav-safe{padding-bottom:env(safe-area-inset-bottom)}
+    .donut{background:conic-gradient(#3b82f6 0 43%,#ef4444 43% 65%,#262626 65% 100%);box-shadow:0 0 42px #3b82f626}.donut:after{content:'';position:absolute;inset:13px;border-radius:50%;background:#090909;box-shadow:inset 0 0 20px #000c}
+    .stars{background-image:radial-gradient(circle at 18% 22%,#fff 0 1px,transparent 1.5px),radial-gradient(circle at 78% 32%,#60a5fa 0 1px,transparent 1.5px),radial-gradient(circle at 64% 78%,#fff9 0 1px,transparent 1.5px);background-size:88px 88px,116px 116px,137px 137px}
+    dialog{margin:auto;max-height:calc(100dvh - 2rem);overflow-y:auto}dialog::backdrop{background:#000b;backdrop-filter:blur(5px)}
+    input,select,textarea{color-scheme:dark}
+    html.red-light-mode{filter:grayscale(1) sepia(1) hue-rotate(-50deg) saturate(6) brightness(.72)}
+    html.red-light-mode dialog{filter:grayscale(1) sepia(1) hue-rotate(-50deg) saturate(6) brightness(.72)}
+    #toast-container{position:fixed;left:50%;bottom:calc(6rem + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:.5rem;width:calc(100% - 2.5rem);max-width:380px;pointer-events:none}
+    .toast{pointer-events:auto;display:flex;align-items:center;gap:.6rem;border-radius:.9rem;padding:.75rem 1rem;font-size:.8rem;font-weight:500;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);background:#1a1a1a;opacity:0;transform:translateY(12px);transition:opacity .25s ease,transform .25s ease}
+    .toast.toast-show{opacity:1;transform:translateY(0)}
+    .toast.toast-success{background:#0f2a1a;border-color:#22c55e40}
+    .toast.toast-error{background:#2a1414;border-color:#ef444440}
+    .toast .toast-icon{flex-shrink:0}
+  </style>
+</head>
+<body class="bg-black text-white antialiased selection:bg-blue-500/30">
+<main class="relative mx-auto min-h-dvh max-w-md overflow-hidden bg-black">
+  <div class="safe-bottom h-full overflow-y-auto px-5 pt-6">
+    <section id="home" data-section="home" class="space-y-7" aria-labelledby="dashboard-title">
+      <header class="flex items-center gap-3"><div class="relative flex-1"><svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input class="h-11 w-full rounded-xl border border-neutral-800 bg-neutral-950 pl-10 pr-4 text-sm outline-none placeholder:text-neutral-600 focus:border-blue-500/70" type="search" placeholder="Поиск объектов" aria-label="Поиск объектов"></div><button id="toggle-red-light" class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-neutral-800 bg-neutral-950 text-neutral-300 transition hover:border-red-500/70 hover:text-red-400" type="button" aria-pressed="false" aria-label="Переключить ночной режим (красный свет)" title="Ночной режим"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1 1 11.5 3a7 7 0 0 0 9.5 9.5Z"/></svg></button><button id="open-settings" class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-neutral-800 bg-neutral-950 text-neutral-300" type="button" aria-label="Открыть настройки профиля"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.9-3.4 3.3-5.2 7-5.2s6.1 1.8 7 5.2"/></svg></button></header>
+      <div class="text-center"><p class="mb-2 text-[10px] font-medium uppercase tracking-[.28em] text-neutral-500">Общее накопление</p><h1 id="dashboard-title" class="text-6xl font-light tracking-tight">0<span class="ml-1 text-2xl font-semibold text-neutral-400">ч</span> 00<span class="text-2xl font-semibold text-neutral-400">м</span></h1><p id="session-total" class="mt-3 text-xs text-neutral-500">Всего за 0 сессий</p><p id="month-total" class="mt-1 text-[11px] text-neutral-600">За этот месяц: 0ч 00м</p></div>
+      <div id="type-filters" class="-mx-5 flex gap-2 overflow-x-auto whitespace-nowrap px-5 scrollbar-none"><button type="button" data-type-filter="Все" class="type-filter shrink-0 rounded-full border border-white/60 bg-white/10 px-4 py-2 text-xs text-white transition">Все</button><button type="button" data-type-filter="Галактика" class="type-filter shrink-0 rounded-full border border-blue-500/70 bg-blue-500/10 px-4 py-2 text-xs text-blue-300 opacity-50 transition">Галактики <span id="galaxy-count" class="text-blue-500">0</span></button><button type="button" data-type-filter="Туманность" class="type-filter shrink-0 rounded-full border border-red-500/60 bg-red-500/5 px-4 py-2 text-xs text-red-300 opacity-50 transition">Туманности <span id="nebula-count" class="text-red-500">0</span></button><button type="button" data-type-filter="Скопление" class="type-filter shrink-0 rounded-full border border-neutral-700 px-4 py-2 text-xs text-neutral-400 opacity-50 transition">Скопления <span id="cluster-count" class="text-neutral-600">0</span></button></div>
+      <section class="relative overflow-hidden rounded-2xl border border-neutral-900 bg-neutral-950 p-6" aria-label="Распределение экспозиции"><div class="stars absolute inset-0 opacity-40"></div><div class="relative flex items-center justify-between gap-5"><div><p class="text-xs text-neutral-500">Накопленное время</p><p id="donut-label" class="mt-2 text-2xl font-medium">За всё время</p><div class="mt-7 space-y-3 text-xs"><p class="flex items-center gap-2 text-neutral-400"><i class="h-2 w-2 rounded-full bg-blue-500"></i>Галактики <b id="galaxy-percent" class="ml-auto text-white">0%</b></p><p class="flex items-center gap-2 text-neutral-400"><i class="h-2 w-2 rounded-full bg-red-500"></i>Туманности <b id="nebula-percent" class="ml-auto text-white">0%</b></p><p class="flex items-center gap-2 text-neutral-400"><i class="h-2 w-2 rounded-full bg-neutral-600"></i>Скопления <b id="cluster-percent" class="ml-auto text-white">0%</b></p></div></div><button type="button" id="exposure-donut" class="donut relative grid h-36 w-36 shrink-0 cursor-pointer place-items-center rounded-full" aria-label="Открыть лучший объект"><span class="relative z-10 text-center text-xs text-neutral-400">Лучший<br><b id="best-object" class="text-lg text-white">Нет данных</b></span></button></div></section>
+      <div><div class="mb-3 flex items-end justify-between"><h2 class="text-lg font-medium">Топ по накоплению</h2><button class="text-xs text-blue-400" data-open-tab="objects">Все объекты</button></div><div id="top-objects" class="space-y-3"></div></div>
+      <div><div class="mb-3 flex items-end justify-between"><h2 class="text-lg font-medium">Лучшее для съёмки сейчас</h2><span id="tonight-month" class="text-xs text-neutral-500"></span></div><div id="tonight-best" class="-mx-5 flex gap-3 overflow-x-auto whitespace-nowrap px-5 scrollbar-none"></div></div>
+    </section>
+
+    <section id="objects" data-section="objects" class="hidden space-y-5" aria-labelledby="objects-title">
+      <header class="flex items-center justify-between"><div><p class="text-[10px] uppercase tracking-[.25em] text-neutral-500">Каталог наблюдений</p><h1 id="objects-title" class="mt-2 text-3xl font-medium">Объекты</h1></div><button id="open-create" class="rounded-xl bg-blue-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-400">+ Объект</button></header>
+      <div class="relative"><svg class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="object-search" class="h-12 w-full rounded-xl border border-neutral-800 bg-neutral-950 pl-11 pr-4 text-sm outline-none placeholder:text-neutral-600 focus:border-blue-500/70" placeholder="Поиск по названию или каталогу (M31, NGC 7000...)" aria-label="Поиск по объектам"></div>
+      <div id="object-filters" class="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-none"><button data-filter="Все" class="filter shrink-0 rounded-full border border-blue-500 bg-blue-500/10 px-4 py-2 text-xs text-blue-300">Все</button><button data-filter="Галактика" class="filter shrink-0 rounded-full border border-neutral-800 px-4 py-2 text-xs text-neutral-500">Галактики</button><button data-filter="Туманность" class="filter shrink-0 rounded-full border border-neutral-800 px-4 py-2 text-xs text-neutral-500">Туманности</button><button data-filter="Скопление" class="filter shrink-0 rounded-full border border-neutral-800 px-4 py-2 text-xs text-neutral-500">Скопления</button><button data-filter="Другое" class="filter shrink-0 rounded-full border border-neutral-800 px-4 py-2 text-xs text-neutral-500">Другое</button></div>
+      <div id="object-list" class="space-y-3"></div>
+    </section>
+    <section id="sessions" data-section="sessions" class="hidden space-y-5" aria-labelledby="sessions-title"><header class="flex items-center justify-between"><div><p class="text-[10px] uppercase tracking-[.25em] text-neutral-500">Журнал наблюдений</p><h1 id="sessions-title" class="mt-2 text-3xl font-medium">Сессии съёмок</h1></div><button id="open-session" class="rounded-xl bg-blue-500 px-3 py-2 text-sm font-medium hover:bg-blue-400" type="button">+ Сессия</button></header><div class="-mx-5 flex gap-2 overflow-x-auto whitespace-nowrap px-5 scrollbar-none" id="session-group-tabs"><button type="button" data-group-by="year" class="session-group-btn shrink-0 rounded-full border border-blue-500 bg-blue-500/10 px-4 py-2 text-xs text-blue-300 transition">По году</button><button type="button" data-group-by="object" class="session-group-btn shrink-0 rounded-full border border-neutral-800 px-4 py-2 text-xs text-neutral-500 transition">По объекту</button><button type="button" data-group-by="filter" class="session-group-btn shrink-0 rounded-full border border-neutral-800 px-4 py-2 text-xs text-neutral-500 transition">По фильтру</button></div><div id="session-value-filter" class="hidden -mx-5 flex gap-2 overflow-x-auto whitespace-nowrap px-5 scrollbar-none"></div><div id="session-list" class="space-y-7"></div></section><section id="weather" data-section="weather" class="hidden space-y-5" aria-labelledby="weather-title">
+      <header><p class="text-[10px] uppercase tracking-[.25em] text-neutral-500">Астропрогноз</p><h1 id="weather-title" class="mt-2 text-3xl font-medium">Погода</h1></header>
+      <div class="space-y-3">
+        <div class="relative">
+          <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="city-search" class="h-11 w-full rounded-xl border border-neutral-800 bg-neutral-950 pl-11 pr-4 text-sm outline-none placeholder:text-neutral-600 focus:border-blue-500/70" type="search" placeholder="Поиск города (например, Таллин)" autocomplete="off" aria-label="Поиск города">
+          <div id="city-results" class="absolute left-0 right-0 top-full z-20 mt-1 hidden overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950 shadow-2xl"></div>
+        </div>
+        <div class="-mx-5 flex gap-2 overflow-x-auto whitespace-nowrap px-5 scrollbar-none" id="city-presets"></div>
+        <div class="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+          <button id="gps-btn" type="button" class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-300 transition hover:border-blue-500/70 hover:text-blue-400" aria-label="Определить по GPS">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          </button>
+          <div class="min-w-0 flex-1">
+            <p id="weather-location-name" class="truncate text-sm font-medium">Москва</p>
+            <p id="weather-location-meta" class="truncate text-[11px] text-neutral-500">55.7558, 37.6173</p>
+          </div>
+          <span id="weather-loading" class="hidden shrink-0 text-[11px] text-blue-400">Загрузка…</span>
+        </div>
+      </div>
+      <div class="flex gap-2 rounded-xl border border-neutral-800 bg-neutral-950 p-1" id="weather-provider-selector">
+        <button type="button" data-provider="open-meteo" class="provider-btn flex-1 rounded-lg px-3 py-2 text-xs font-medium transition">Open-Meteo</button>
+        <button type="button" data-provider="owm" class="provider-btn flex-1 rounded-lg px-3 py-2 text-xs font-medium transition">OpenWeatherMap</button>
+      </div>
+      <div id="weather-day-selector" class="flex gap-2"></div>
+      <div id="weather-summary"></div>
+      <div id="weather-warnings" class="space-y-2"></div>
+      <div><h2 class="mb-3 text-lg font-medium">Прогноз по часам <span id="weather-hourly-range" class="text-xs font-normal text-neutral-500"></span></h2><div id="weather-hourly" class="space-y-2"></div></div>
+    </section><section id="notes" data-section="notes" class="hidden space-y-5" aria-labelledby="notes-title">
+      <header class="flex items-center justify-between"><div><p class="text-[10px] uppercase tracking-[.25em] text-neutral-500">Личные записи</p><h1 id="notes-title" class="mt-2 text-3xl font-medium">Заметки</h1></div><button id="open-note" class="rounded-xl bg-blue-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-400">+ Заметка</button></header>
+      <div id="note-list" class="space-y-3"></div>
+    </section>
+  </div>
+  <button id="open-create-fab" class="fixed bottom-[4.8rem] right-[max(1.25rem,calc((100vw-28rem)/2))] z-20 grid h-14 w-14 place-items-center rounded-full bg-red-500 text-2xl shadow-[0_8px_30px_rgba(239,68,68,.35)] transition hover:bg-red-400 active:scale-95" type="button" aria-label="Добавить объект">+</button>
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <nav class="nav-safe fixed bottom-0 left-1/2 z-10 w-full max-w-md -translate-x-1/2 border-t border-neutral-900 bg-black/95 px-2 pt-3 backdrop-blur-xl" aria-label="Основная навигация"><div class="grid h-14 grid-cols-5">
+    <button class="tab-button flex flex-col items-center gap-1 text-blue-400" data-tab="home" aria-current="page"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10Z"/><path d="M9 21v-6h6v6"/></svg><span class="text-[10px]">Главная</span></button>
+    <button class="tab-button flex flex-col items-center gap-1 text-neutral-600" data-tab="objects"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg><span class="text-[10px]">Объекты</span></button>
+    <button class="tab-button flex flex-col items-center gap-1 text-neutral-600" data-tab="sessions"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg><span class="text-[10px]">Сессии</span></button>
+    <button class="tab-button flex flex-col items-center gap-1 text-neutral-600" data-tab="weather"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18h10a4 4 0 0 0 .5-8A5.5 5.5 0 0 0 7 11a3.5 3.5 0 0 0 0 7Z"/><path d="M8 4v2M4.5 6.5 6 8M16 6l-1.5 2"/></svg><span class="text-[10px]">Погода</span></button>
+    <button class="tab-button flex flex-col items-center gap-1 text-neutral-600" data-tab="notes"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h14v18H5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span class="text-[10px]">Заметки</span></button>
+  </div></nav>
+</main>
+
+<dialog id="object-dialog" class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-0 text-white shadow-2xl"><div class="p-5"><div class="mb-6 flex items-center justify-between"><div><p class="text-[10px] uppercase tracking-[.2em] text-neutral-500">Карточка объекта</p><h2 id="dialog-title" class="mt-1 text-2xl font-medium">Объект</h2></div><button class="close-dialog grid h-9 w-9 place-items-center rounded-lg bg-neutral-900 text-xl text-neutral-400" aria-label="Закрыть">×</button></div><div id="dialog-content"></div></div></dialog>
+ <dialog id="create-dialog" class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-0 text-white shadow-2xl"><form id="create-form" class="space-y-4 p-5"><div class="mb-5 flex items-center justify-between"><h2 id="create-title" class="text-2xl font-medium">Новый объект</h2><button type="button" class="close-dialog grid h-9 w-9 place-items-center rounded-lg bg-neutral-900 text-xl text-neutral-400" aria-label="Закрыть">×</button></div><label class="block text-xs text-neutral-400">Код каталога / обозначение<input name="catalog" required class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none focus:border-blue-500" placeholder="M42, NGC 7000"></label><label class="block text-xs text-neutral-400">Название объекта<input name="name" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none focus:border-blue-500" placeholder="Туманность Ориона, Андромеда"></label><label class="block text-xs text-neutral-400">Тип<select name="type" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"><option>Галактика</option><option>Туманность</option><option>Скопление</option><option>Планета</option><option>Другое</option></select></label><label class="block text-xs text-neutral-400">Статус<select name="status" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"><option>В планах</option><option>Снимается</option><option>Готово</option></select></label><label class="block text-xs text-neutral-400">Заметки по объекту<textarea name="notes" rows="3" class="mt-2 w-full rounded-xl border border-neutral-800 bg-black p-3 text-sm outline-none focus:border-blue-500" placeholder="Общий тайминг, фильтры, кадрирование..."></textarea></label><button id="create-submit" class="mt-2 h-11 w-full rounded-xl bg-blue-500 text-sm font-medium hover:bg-blue-400" type="submit">Добавить объект</button></form></dialog>
+<dialog id="settings-dialog" class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-0 text-white shadow-2xl"><form id="settings-form" class="space-y-4 p-5"><div class="mb-5 flex items-center justify-between"><div><p class="text-[10px] uppercase tracking-[.2em] text-neutral-500">Профиль и оборудование</p><h2 class="mt-1 text-2xl font-medium">Настройки профиля</h2></div><button type="button" class="close-dialog grid h-9 w-9 place-items-center rounded-lg bg-neutral-900 text-xl text-neutral-400" aria-label="Закрыть">×</button></div><div class="block text-xs text-neutral-400">Сетапы<div id="setups-list" class="mt-2 space-y-2"></div><button type="button" id="add-setup-btn" class="mt-2 flex h-9 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-700 text-xs text-blue-400 transition hover:border-blue-500/60 hover:bg-blue-500/5">+ Добавить сетап</button></div><div class="block text-xs text-neutral-400">Камеры<div id="cameras-list" class="mt-2 space-y-2"></div><button type="button" id="add-camera-btn" class="mt-2 flex h-9 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-700 text-xs text-blue-400 transition hover:border-blue-500/60 hover:bg-blue-500/5">+ Добавить камеру</button></div><div class="block text-xs text-neutral-400">Фильтры<div id="filters-list" class="mt-2 space-y-2"></div><button type="button" id="add-filter-btn" class="mt-2 flex h-9 w-full items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-700 text-xs text-blue-400 transition hover:border-blue-500/60 hover:bg-blue-500/5">+ Добавить фильтр</button></div><label class="block text-xs text-neutral-400">Стандартный Bortle<select name="bortle" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"></select></label><label class="block text-xs text-neutral-400">Стандартная локация<input name="location" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none focus:border-blue-500" /></label><div class="block text-xs text-neutral-400">Данные<div class="mt-2 grid grid-cols-2 gap-2"><button type="button" id="export-data-btn" class="flex h-11 items-center justify-center gap-1 rounded-xl border border-neutral-700 bg-black text-xs font-medium text-neutral-200 transition hover:border-blue-500/60 hover:bg-blue-500/5">Экспорт данных в JSON</button><label class="flex h-11 cursor-pointer items-center justify-center gap-1 rounded-xl border border-neutral-700 bg-black text-xs font-medium text-neutral-200 transition hover:border-blue-500/60 hover:bg-blue-500/5">Импорт из JSON<input type="file" id="import-data-input" accept="application/json,.json" class="hidden"></label></div><p class="mt-2 text-[10px] leading-snug text-neutral-600">Импорт полностью заменит текущие объекты, сессии, заметки и настройки.</p></div><button class="mt-2 h-11 w-full rounded-xl bg-blue-500 text-sm font-medium hover:bg-blue-400" type="submit">Сохранить настройки</button></form></dialog>
+<dialog id="session-dialog" class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-0 text-white shadow-2xl"><form id="session-form" class="grid grid-cols-2 gap-4 p-5"><div class="col-span-2 mb-2 flex items-center justify-between"><h2 id="session-dialog-title" class="text-2xl font-medium">Новая сессия</h2><button type="button" class="close-dialog grid h-9 w-9 place-items-center rounded-lg bg-neutral-900 text-xl text-neutral-400" aria-label="Закрыть">×</button></div><label class="col-span-2 block text-xs text-neutral-400">Объект<select name="catalog" required class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"></select></label><label class="col-span-2 block text-xs text-neutral-400">Тип камеры<div class="mt-2 grid grid-cols-2 gap-2"><button type="button" data-camera-type="color" class="camera-type-btn h-11 rounded-xl border border-blue-500 bg-blue-500/10 text-sm font-medium text-blue-300 transition">Цветная</button><button type="button" data-camera-type="mono" class="camera-type-btn h-11 rounded-xl border border-neutral-800 text-sm font-medium text-neutral-500 transition">Монохром</button></div><input type="hidden" name="cameraType" value="color"></label><label class="block text-xs text-neutral-400">Дата<input name="date" type="date" required class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Время начала съёмки<input name="start" type="time" pattern="[0-2][0-9]:[0-5][0-9]" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Локация<input name="location" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Bortle<select name="bortle" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"></select></label><label class="block text-xs text-neutral-400">Сетап<select name="setup" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"></select></label><label class="block text-xs text-neutral-400">Камера<select name="camera" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"></select></label><div id="color-fields" class="col-span-2 grid grid-cols-2 gap-4"><label class="col-span-2 block text-xs text-neutral-400">Фильтр<select name="filter" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none"></select></label><label class="block text-xs text-neutral-400">Выдержка лайта (сек)<input name="exposure" type="number" min="0" value="120" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Light<input name="light" type="number" min="0" value="65" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Dark<input name="dark" type="number" min="0" value="10" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Flat<input name="flat" type="number" min="0" value="10" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Bias<input name="bias" type="number" min="0" value="10" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label><label class="block text-xs text-neutral-400">Время съёмки флэтов<input name="flat_time" type="time" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none" /></label></div><div id="mono-fields" class="col-span-2 hidden space-y-3"><div class="flex items-center justify-between"><p class="text-xs text-neutral-400">Каналы съёмки</p><span class="text-[10px] text-neutral-600">Выдержка / Light / Dark / Flat — на канал</span></div><div id="channels-container" class="space-y-2"></div><button type="button" id="add-channel-btn" class="flex h-10 w-full items-center justify-center gap-1 rounded-xl border border-dashed border-neutral-700 text-xs text-blue-400 transition hover:border-blue-500/60 hover:bg-blue-500/5">+ Добавить канал</button></div><label class="col-span-2 block text-xs text-neutral-400">Заметки<textarea name="notes" rows="3" class="mt-2 w-full rounded-xl border border-neutral-800 bg-black p-3 text-sm outline-none"></textarea></label><button id="session-submit" class="col-span-2 mt-2 h-11 rounded-xl bg-blue-500 text-sm font-medium hover:bg-blue-400" type="submit">Сохранить сессию</button></form></dialog>
+<dialog id="note-dialog" class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-0 text-white shadow-2xl"><form id="note-form" class="space-y-4 p-5"><div class="mb-2 flex items-center justify-between"><h2 id="note-title" class="text-2xl font-medium">Новая заметка</h2><button type="button" class="close-dialog grid h-9 w-9 place-items-center rounded-lg bg-neutral-900 text-xl text-neutral-400" aria-label="Закрыть">×</button></div><label class="block text-xs text-neutral-400">Заголовок<input name="title" required maxlength="80" class="mt-2 h-11 w-full rounded-xl border border-neutral-800 bg-black px-3 text-sm outline-none focus:border-blue-500" placeholder="Краткий заголовок"></label><label class="block text-xs text-neutral-400">Текст заметки<textarea name="content" rows="6" class="mt-2 w-full rounded-xl border border-neutral-800 bg-black p-3 text-sm outline-none focus:border-blue-500" placeholder="Ваши заметки..."></textarea></label><button id="note-submit" class="mt-2 h-11 w-full rounded-xl bg-blue-500 text-sm font-medium hover:bg-blue-400" type="submit">Создать заметку</button></form></dialog>
+
+<script>
+  const RED_LIGHT_KEY='redLightMode';
+  function applyRedLightMode(enabled){document.documentElement.classList.toggle('red-light-mode',enabled);const btn=document.querySelector('#toggle-red-light');if(btn){btn.setAttribute('aria-pressed',String(enabled));btn.classList.toggle('border-red-500/70',enabled);btn.classList.toggle('text-red-400',enabled);btn.classList.toggle('bg-red-500/10',enabled);}}
+  function toggleRedLightMode(){const enabled=!(localStorage.getItem(RED_LIGHT_KEY)==='1');localStorage.setItem(RED_LIGHT_KEY,enabled?'1':'0');applyRedLightMode(enabled);}
+  applyRedLightMode(localStorage.getItem(RED_LIGHT_KEY)==='1');
+  const DATA_KEY='ASTROLOG_V2_DATA',SCHEMA_VERSION=2;
+  const demoObjects=[
+   {id:'obj_m31',catalog:'M31',name:'Андромеда',type:'Галактика',status:'Готово',notes:'Снималась при прозрачном небе. Хорошая детализация пылевых полос.',color:'blue'},
+   {id:'obj_m42',catalog:'M42',name:'Орион',type:'Туманность',status:'Готово',notes:'Контрастная туманность, использовался узкополосный фильтр.',color:'red'},
+   {id:'obj_ngc7000',catalog:'NGC 7000',name:'Северная Америка',type:'Туманность',status:'Снимается',notes:'Нужно добрать кадры с фильтром Ha.',color:'red'},
+   {id:'obj_ic1396',catalog:'IC 1396',name:'Хобот Слона',type:'Туманность',status:'В планах',notes:'Запланировать съемку в темную ночь.',color:'blue'},
+   {id:'obj_m13',catalog:'M13',name:'Большое скопление Геркулеса',type:'Скопление',status:'В планах',notes:'Проверить фокус и сделать серию RGB-кадров.',color:'blue'}
+  ];
+  const demoSessions=[
+   {id:'demo-m31',objectId:'obj_m31',date:'2026-08-28',start:'22:10',location:'Загородная площадка',bortle:'4',setup:'Askar SQA55',camera:'ZWO ASI 2600MC Air',filter:'UV/IR-cut',exposure:120,light:65,dark:10,bias:10,flat:10,notes:'Прозрачное небо, хорошая детализация пылевых полос.'},
+   {id:'demo-m42',objectId:'obj_m42',date:'2026-08-21',start:'21:35',location:'Загородная площадка',bortle:'4',setup:'Askar SQA55',camera:'ZWO ASI 2600MC Air',filter:'L-eXtreme',exposure:180,light:40,dark:10,bias:10,flat:10,notes:'Контрастная туманность, слабый ветер.'},
+   {id:'demo-ngc7000',objectId:'obj_ngc7000',date:'2026-08-14',start:'23:05',location:'Загородная площадка',bortle:'4',setup:'Askar SQA55',camera:'ZWO ASI 2600MC Air',filter:'Ha',exposure:180,light:35,dark:10,bias:10,flat:10,notes:'Нужно продолжить съемку в следующую темную ночь.'}
+  ];
+  const demoNotes=[
+   {id:'note_1',title:'Первый выезд в Можайск',content:'Хорошая площадка, Bortle ~4. Подъезд — грунтовка, последние 500 м аккуратно. Северный горизонт открыт, южный закрыт деревьями. Место для машины есть.',createdAt:'2026-08-27T22:00:00',updatedAt:'2026-08-27T22:00:00'},
+   {id:'note_2',title:'Настройки SQA55 + 2600MC',content:'Бэкфокус: 55 мм (как в названии).\nОхлаждение: ставить -10°C, выжидать 15 мин после выхода на температуру.\nФильтр: UV/IR-cut для широкополосных, L-eXtreme для эмиссионных.',createdAt:'2026-08-20T14:30:00',updatedAt:'2026-08-20T14:30:00'}
+  ];
+  const POPULAR_DB=[
+   {catalog:'M42',name:'Туманность Ориона',type:'Туманность',season:[11,12,1,2,3]},
+   {catalog:'M45',name:'Плеяды',type:'Скопление',season:[10,11,12,1,2,3]},
+   {catalog:'M81',name:'Галактика Боде',type:'Галактика',season:[1,2,3,4,5]},
+   {catalog:'M82',name:'Сигара',type:'Галактика',season:[1,2,3,4,5]},
+   {catalog:'M51',name:'Водоворот',type:'Галактика',season:[3,4,5,6]},
+   {catalog:'M101',name:'Вертушка',type:'Галактика',season:[3,4,5,6]},
+   {catalog:'M65',name:'Галактика в Льве',type:'Галактика',season:[3,4,5]},
+   {catalog:'M66',name:'Галактика в Льве',type:'Галактика',season:[3,4,5]},
+   {catalog:'M13',name:'Большое скопление в Геркулесе',type:'Скопление',season:[4,5,6,7,8]},
+   {catalog:'M3',name:'Скопление в Гончих Псах',type:'Скопление',season:[3,4,5,6]},
+   {catalog:'M31',name:'Андромеда',type:'Галактика',season:[8,9,10,11,12,1]},
+   {catalog:'M33',name:'Галактика в Треугольнике',type:'Галактика',season:[9,10,11,12,1]},
+   {catalog:'NGC 7000',name:'Северная Америка',type:'Туманность',season:[6,7,8,9,10]},
+   {catalog:'IC 1396',name:'Хобот Слона',type:'Туманность',season:[7,8,9,10,11]},
+   {catalog:'M57',name:'Кольцо',type:'Туманность',season:[6,7,8,9,10]},
+   {catalog:'M27',name:'Гантель',type:'Туманность',season:[7,8,9,10]},
+   {catalog:'NGC 6960',name:'Вуаль (Западная)',type:'Туманность',season:[6,7,8,9,10]},
+   {catalog:'NGC 6992',name:'Вуаль (Восточная)',type:'Туманность',season:[6,7,8,9,10]},
+   {catalog:'M16',name:'Орёл',type:'Туманность',season:[6,7,8]},
+   {catalog:'M17',name:'Омега',type:'Туманность',season:[6,7,8]},
+   {catalog:'M8',name:'Лагуна',type:'Туманность',season:[6,7,8]},
+   {catalog:'M20',name:'Трёхраздельная',type:'Туманность',season:[6,7,8]},
+   {catalog:'M11',name:'Дикие Утки',type:'Скопление',season:[6,7,8,9]},
+   {catalog:'M1',name:'Крабовидная туманность',type:'Туманность',season:[10,11,12,1,2,3]},
+   {catalog:'NGC 869',name:'h Персея',type:'Скопление',season:[9,10,11,12,1,2]},
+   {catalog:'NGC 884',name:'Chi Персея',type:'Скопление',season:[9,10,11,12,1,2]},
+   {catalog:'M106',name:'Галактика в Гончих Псах',type:'Галактика',season:[2,3,4,5]},
+   {catalog:'NGC 7635',name:'Пузырь',type:'Туманность',season:[8,9,10,11,12]},
+   {catalog:'NGC 281',name:'Пакман',type:'Туманность',season:[8,9,10,11,12]},
+   {catalog:'M92',name:'Скопление в Геркулесе',type:'Скопление',season:[4,5,6,7,8]}
+  ];
+  const storedData=JSON.parse(localStorage.getItem(DATA_KEY)||'null');let objects,sessions,notes;
+  if(!storedData||storedData.version!==SCHEMA_VERSION||!Array.isArray(storedData.objects)||!Array.isArray(storedData.sessions)||storedData.objects.some(o=>!o.id)||storedData.sessions.some(s=>!s.objectId)){objects=demoObjects.map(o=>({...o}));sessions=demoSessions.map(s=>({...s}));notes=demoNotes.map(n=>({...n}));}else{objects=storedData.objects;sessions=storedData.sessions;notes=Array.isArray(storedData.notes)?storedData.notes:[];}
+  function saveData(){const data={version:SCHEMA_VERSION,objects,sessions,notes};localStorage.setItem(DATA_KEY,JSON.stringify(data));localStorage.setItem('objects',JSON.stringify(objects));localStorage.setItem('sessions',JSON.stringify(sessions));localStorage.setItem('notes',JSON.stringify(notes));}
+  saveData();
+ const defaultSettings={setups:['Askar SQA55'],cameras:['ZWO ASI 2600MC Air'],filters:['Без фильтра','Antlia RGB','Laida 7nm','UV/IR-cut','L-eXtreme','Ha','OIII','SII'],bortle:'4',location:'Загородная площадка'};
+ const CHANNELS=[{id:'L',label:'L (Luminance)',color:'#e5e7eb'},{id:'R',label:'R (Red)',color:'#ef4444'},{id:'G',label:'G (Green)',color:'#22c55e'},{id:'B',label:'B (Blue)',color:'#3b82f6'},{id:'Ha',label:'Hα (H-alpha)',color:'#f43f5e'},{id:'OIII',label:'OIII',color:'#14b8a6'},{id:'SII',label:'SII',color:'#b91c1c'}];
+ function channelInfo(id){return CHANNELS.find(c=>c.id===id)||CHANNELS[0];}
+ function channelTotals(s){if(s.cameraType!=='mono'||!Array.isArray(s.channels))return{light:Number(s.light)||0,flat:Number(s.flat)||0,dark:Number(s.dark)||0};return s.channels.reduce((sum,c)=>({light:sum.light+(Number(c.light)||0),flat:sum.flat+(Number(c.flat)||0),dark:sum.dark+(Number(c.dark)||0)}),{light:0,flat:0,dark:0});}
+ function channelDuration(c){return(Number(c.light)||0)*(Number(c.exposure)||0);}
+ let settings={...defaultSettings,...JSON.parse(localStorage.getItem('settings')||'{}')};
+ if(typeof settings.setup==='string'&&settings.setup){if(!Array.isArray(settings.setups)||!settings.setups.length)settings.setups=[settings.setup];delete settings.setup;}
+ if(typeof settings.camera==='string'&&settings.camera){if(!Array.isArray(settings.cameras)||!settings.cameras.length)settings.cameras=[settings.camera];delete settings.camera;}
+ if(!Array.isArray(settings.setups)||!settings.setups.length)settings.setups=defaultSettings.setups.slice();
+ if(!Array.isArray(settings.cameras)||!settings.cameras.length)settings.cameras=defaultSettings.cameras.slice();
+ if(!Array.isArray(settings.filters)||!settings.filters.length)settings.filters=defaultSettings.filters.slice();
+ let draftSetups=[],draftCameras=[],draftFilters=[];
+ function renderEquipmentList(containerId,arr){const container=document.querySelector(containerId);if(!container)return;container.innerHTML=arr.map((item,idx)=>`<div class="flex items-center gap-2 rounded-xl border border-neutral-800 bg-black px-3 py-2" data-idx="${idx}"><span class="flex-1 truncate text-sm">${escapeHtml(item)}</span><button type="button" class="edit-item grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-neutral-900 text-neutral-400 hover:text-blue-400" aria-label="Редактировать"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button type="button" class="delete-item grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-neutral-900 text-neutral-500 hover:bg-red-500/10 hover:text-red-400" aria-label="Удалить">×</button></div>`).join('')||'<p class="text-xs text-neutral-600">Список пуст</p>';container.querySelectorAll('.edit-item').forEach(btn=>{btn.onclick=()=>{const idx=Number(btn.closest('[data-idx]').dataset.idx);const val=prompt('Редактировать значение',arr[idx]);if(val!==null&&val.trim()){arr[idx]=val.trim();renderEquipmentList(containerId,arr);}};});container.querySelectorAll('.delete-item').forEach(btn=>{btn.onclick=()=>{const idx=Number(btn.closest('[data-idx]').dataset.idx);if(arr.length<=1){alert('Должен остаться хотя бы один элемент.');return;}arr.splice(idx,1);renderEquipmentList(containerId,arr);};});}
+ function populateSelectOptions(selectEl,arr,selected){if(!selectEl)return;let options=arr.slice();if(selected&&!options.includes(selected))options=[selected,...options];selectEl.innerHTML=options.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');selectEl.value=selected&&options.includes(selected)?selected:(options[0]||'');}
+ const sections=document.querySelectorAll('[data-section]'),tabs=document.querySelectorAll('.tab-button');let currentTab='home';
+  function switchTab(target){currentTab=target;sections.forEach(s=>s.classList.toggle('hidden',s.dataset.section!==target));tabs.forEach(t=>{let a=t.dataset.tab===target;t.classList.toggle('text-blue-400',a);t.classList.toggle('text-neutral-600',!a);t.setAttribute('aria-current',a?'page':'false')});const fab=document.querySelector('#open-create-fab');const fabLabels={objects:'Добавить объект',sessions:'Добавить сессию',notes:'Добавить заметку'};fab.setAttribute('aria-label',fabLabels[target]||'Добавить сессию');}
+tabs.forEach(t=>t.onclick=()=>switchTab(t.dataset.tab));document.querySelectorAll('[data-open-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.openTab));
+const list=document.querySelector('#object-list'),search=document.querySelector('#object-search');let filter='Все';
+ const formatTime=minutes=>`${Math.floor(minutes/60)}ч ${String(minutes%60).padStart(2,'0')}м`,formatSeconds=seconds=>formatTime(Math.floor(seconds/60));
+  function sessionDuration(s){if(s.cameraType==='mono'&&Array.isArray(s.channels))return s.channels.reduce((sum,c)=>sum+channelDuration(c),0);return (Number(s.light)||0)*(Number(s.exposure)||0);}
+  function createId(){return globalThis.crypto&&typeof globalThis.crypto.randomUUID==='function'?globalThis.crypto.randomUUID():`session-${Date.now()}-${Math.random().toString(16).slice(2)}`;}
+   function objectLabel(o){return o.name?`${o.catalog} · ${o.name}`:o.catalog;}
+   function objectTone(type){return type==='Галактика'?{border:'border-blue-500/30',bg:'bg-blue-600/20',text:'text-blue-300',accent:'text-blue-400'}:type==='Туманность'?{border:'border-red-500/30',bg:'bg-red-600/20',text:'text-red-300',accent:'text-red-400'}:type==='Скопление'?{border:'border-neutral-600/40',bg:'bg-gray-700/40',text:'text-gray-300',accent:'text-gray-400'}:{border:'border-neutral-700',bg:'bg-neutral-800/60',text:'text-neutral-300',accent:'text-neutral-400'};}
+   function catalogBadgeHtml(o){return `<div class="min-w-[4rem] h-12 shrink-0 rounded-full flex items-center justify-center text-center px-2 font-bold text-[10px] leading-tight break-words border ${objectTone(o.type).border} ${objectTone(o.type).bg} ${objectTone(o.type).text}">${escapeHtml(o.catalog)}</div>`;}
+   function syncObjects(){objects.forEach(o=>{const own=sessions.filter(s=>s.objectId===o.id);o.sessions=own.length;o.seconds=own.reduce((sum,s)=>sum+sessionDuration(s),0);o.minutes=Math.floor(o.seconds/60);});}
+   let dashboardTypeFilter='Все';
+   function updateDashboard(){syncObjects();const now=new Date(),currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;const matchesFilter=s=>{if(dashboardTypeFilter==='Все')return true;const o=objects.find(x=>x.id===s.objectId);return o&&o.type===dashboardTypeFilter;};const scopedSessions=sessions.filter(matchesFilter);const totalSeconds=scopedSessions.reduce((sum,s)=>sum+sessionDuration(s),0),sessionCount=scopedSessions.length,monthSeconds=scopedSessions.filter(s=>(s.date||'').slice(0,7)===currentMonthKey).reduce((sum,s)=>sum+sessionDuration(s),0),byType=type=>scopedSessions.filter(s=>{const o=objects.find(x=>x.id===s.objectId);return o&&o.type===type}).reduce((sum,s)=>sum+sessionDuration(s),0),galaxies=byType('Галактика'),nebulae=byType('Туманность'),clusters=byType('Скопление'),percent=value=>totalSeconds?Math.round(value/totalSeconds*100):0;document.querySelector('#dashboard-title').innerHTML=`${Math.floor(totalSeconds/3600)}<span class="ml-1 text-2xl font-semibold text-neutral-400">ч</span> ${String(Math.floor(totalSeconds%3600/60)).padStart(2,'0')}<span class="text-2xl font-semibold text-neutral-400">м</span>`;document.querySelector('#session-total').textContent=`Всего за ${sessionCount} ${sessionCount===1?'сессию':sessionCount>1&&sessionCount<5?'сессии':'сессий'}`;document.querySelector('#month-total').textContent=`За этот месяц: ${Math.floor(monthSeconds/3600)}ч ${String(Math.floor(monthSeconds%3600/60)).padStart(2,'0')}м`;document.querySelector('#donut-label').textContent=dashboardTypeFilter==='Все'?'За всё время':{'Галактика':'Только галактики','Туманность':'Только туманности','Скопление':'Только скопления'}[dashboardTypeFilter]||'За всё время';document.querySelector('#galaxy-percent').textContent=`${percent(galaxies)}%`;document.querySelector('#nebula-percent').textContent=`${percent(nebulae)}%`;document.querySelector('#cluster-percent').textContent=`${percent(clusters)}%`;document.querySelector('#galaxy-count').textContent=objects.filter(o=>o.type==='Галактика').length;document.querySelector('#nebula-count').textContent=objects.filter(o=>o.type==='Туманность').length;document.querySelector('#cluster-count').textContent=objects.filter(o=>o.type==='Скопление').length;const scopedObjects=dashboardTypeFilter==='Все'?objects:objects.filter(o=>o.type===dashboardTypeFilter);const best=scopedObjects.slice().sort((a,b)=>(b.seconds||0)-(a.seconds||0))[0];document.querySelector('#best-object').textContent=best&&best.seconds?best.catalog:'Нет данных';document.querySelector('#exposure-donut').dataset.bestId=best?best.id:'';const galaxyAngle=totalSeconds?galaxies/totalSeconds*360:0,nebulaAngle=totalSeconds?(galaxies+nebulae)/totalSeconds*360:0;document.querySelector('#exposure-donut').style.background=`conic-gradient(#3b82f6 0 ${galaxyAngle}deg,#ef4444 ${galaxyAngle}deg ${nebulaAngle}deg,#262626 ${nebulaAngle}deg 360deg)`;document.querySelectorAll('.type-filter').forEach(btn=>{const active=btn.dataset.typeFilter===dashboardTypeFilter;btn.classList.toggle('opacity-50',!active);btn.classList.toggle('opacity-100',active);});}
+   function render(){let q=search.value.toLowerCase();list.innerHTML=objects.filter(o=>(filter==='Все'||o.type===filter)&&(objectLabel(o)).toLowerCase().includes(q)).map(o=>{let tone=objectTone(o.type);let count=o.sessions===1?'сессия':o.sessions>1&&o.sessions<5?'сессии':'сессий';return `<article data-catalog="${o.catalog}" class="object-card cursor-pointer rounded-2xl border border-neutral-800/80 bg-neutral-900 p-4 transition hover:border-neutral-600"><div class="flex items-center gap-4">${catalogBadgeHtml(o)}<div class="min-w-0 flex-1 overflow-hidden"><h3 class="truncate font-medium leading-snug">${objectLabel(o)}</h3><p class="mt-1 truncate text-xs text-neutral-500">${o.type} · ${o.sessions} ${count}</p></div><div class="shrink-0 text-right"><strong class="block text-sm ${tone.accent}">${formatSeconds(o.seconds||0)}</strong><span class="text-[10px] text-neutral-600">накоплено</span></div></div><div class="mt-3 flex items-center justify-between border-t border-neutral-800 pt-3 text-[11px] text-neutral-500"><span>${o.status}</span><span>Открыть объект →</span></div></article>`}).join('')||(objects.length?emptyStateHtml({title:'Объекты не найдены',subtitle:'Попробуйте изменить поиск или фильтр'}):emptyStateHtml({title:'Каталог пока пуст',subtitle:'Добавьте первый объект для наблюдений',ctaLabel:'+ Добавить объект',ctaTarget:'objects'}));document.querySelectorAll('.object-card').forEach(c=>c.onclick=()=>openDetails(objects.find(o=>o.catalog===c.dataset.catalog)));}
+    function renderTopObjects(){const latestFor=object=>sessions.filter(s=>s.objectId===object.id).sort((a,b)=>b.date.localeCompare(a.date))[0];const top=objects.slice().sort((a,b)=>{const timeDifference=(b.seconds||0)-(a.seconds||0);if(timeDifference)return timeDifference;const aLatest=latestFor(a),bLatest=latestFor(b);return (bLatest?.date||'').localeCompare(aLatest?.date||'');}).slice(0,5);document.querySelector('#top-objects').innerHTML=top.map(o=>{const latest=latestFor(o);return `<article data-top-id="${o.id}" class="top-object flex cursor-pointer items-center gap-4 rounded-2xl border border-neutral-800/80 bg-neutral-900 p-4">${catalogBadgeHtml(o)}<div class="min-w-0 flex-1 overflow-hidden"><h3 class="truncate font-medium">${objectLabel(o)}</h3><p class="mt-1 truncate text-xs text-neutral-500">${o.type} · ${formatSeconds(o.seconds||0)}</p></div><span class="shrink-0 pl-2 text-right text-xs text-neutral-400">${latest?displayDate(latest.date):'Нет съёмок'}</span></article>`}).join('')||'<p class="py-8 text-center text-sm text-neutral-600">Объектов пока нет</p>';document.querySelectorAll('.top-object').forEach(c=>c.onclick=()=>openDetails(objects.find(o=>o.id===c.dataset.topId)));}
+    const MONTH_NAMES=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+    function getTonightBest(){const month=new Date().getMonth()+1;const ownCatalogs=objects.map(o=>o.catalog.toLowerCase());return POPULAR_DB.filter(o=>o.season.includes(month)&&!ownCatalogs.includes(o.catalog.toLowerCase()));}
+    function renderTonightBest(){const monthLabel=document.querySelector('#tonight-month');if(monthLabel)monthLabel.textContent=MONTH_NAMES[new Date().getMonth()];const items=getTonightBest();const container=document.querySelector('#tonight-best');if(!container)return;container.innerHTML=items.map(o=>{let tone=objectTone(o.type);return `<div class="tonight-card shrink-0 w-40 rounded-2xl border border-neutral-800/80 bg-neutral-900 p-4" data-catalog="${escapeHtml(o.catalog)}"><div class="mb-3 inline-flex h-9 min-w-[4rem] items-center justify-center rounded-full px-3 text-[10px] font-bold leading-tight break-words ${tone.border} ${tone.bg} ${tone.text} border">${escapeHtml(o.catalog)}</div><h3 class="truncate text-sm font-medium">${escapeHtml(o.name)}</h3><p class="mt-1 truncate text-[11px] text-neutral-500">${o.type}</p><button type="button" class="add-tonight mt-3 h-8 w-full rounded-lg border border-dashed border-neutral-700 text-[11px] text-blue-400 transition hover:border-blue-500/60 hover:bg-blue-500/5">+ В каталог</button></div>`}).join('')||'<p class="py-6 text-center text-xs text-neutral-600 w-full">В этом месяце новых целей из подборки нет — все уже в твоём каталоге.</p>';container.querySelectorAll('.add-tonight').forEach(btn=>{btn.onclick=()=>{const catalog=btn.closest('.tonight-card').dataset.catalog;const source=POPULAR_DB.find(o=>o.catalog===catalog);if(!source)return;if(objects.some(o=>o.catalog.toLowerCase()===catalog.toLowerCase()))return;objects.unshift({id:`obj-${Date.now()}-${Math.random().toString(16).slice(2)}`,catalog:source.catalog,name:source.name,type:source.type,status:'В планах',notes:'',color:'blue',minutes:0,seconds:0,sessions:0});saveData();renderApp();openObjectForm(objects.find(o=>o.catalog===catalog));};});}
+   function normalizeObjects(){objects.forEach(o=>{if(!o.id)o.id=`obj-${Date.now()}-${Math.random().toString(16).slice(2)}`;o.catalog=String(o.catalog||'').trim();o.name=String(o.name||'').trim()});}
+   function normalizeSessions(){normalizeObjects();sessions=sessions.map(s=>{if(!s.objectId){const object=objects.find(o=>o.id===s.catalog||o.catalog===s.catalog);if(object)return {...s,objectId:object.id,catalog:object.catalog};}const object=objects.find(o=>o.id===s.objectId);return object?{...s,objectId:object.id,catalog:object.catalog}:s}).filter(s=>s.objectId&&objects.some(o=>o.id===s.objectId));}
+   function escapeHtml(str){const d=document.createElement('div');d.appendChild(document.createTextNode(str));return d.innerHTML;}
+ function emptyStateHtml({title,subtitle='',ctaLabel='',ctaTarget=''}){return `<div class="empty-state flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-neutral-800 bg-neutral-950/40 px-6 py-14 text-center"><div class="grid h-16 w-16 place-items-center rounded-full border border-neutral-800 bg-neutral-900 text-neutral-500"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 7-4 7-12-7z"/><circle cx="7.5" cy="6" r="1.4"/><path d="M13 17l-2 4"/><path d="M9 21h6"/><path d="M4 21l3-4"/><path d="M20 21l-3-4"/></svg></div><div><p class="text-sm font-medium text-neutral-300">${title}</p>${subtitle?`<p class="mt-1 text-xs text-neutral-600">${subtitle}</p>`:''}</div>${ctaLabel?`<button type="button" class="empty-state-cta mt-1 rounded-xl bg-blue-500 px-4 py-2 text-xs font-medium text-white transition hover:bg-blue-400" data-empty-target="${ctaTarget}">${ctaLabel}</button>`:''}</div>`;}
+ document.addEventListener('click',e=>{const btn=e.target.closest('.empty-state-cta');if(!btn)return;const target=btn.dataset.emptyTarget;if(target==='objects')openObjectForm();else if(target==='sessions')openSession();else if(target==='notes')openNoteForm();});
+   function showToast(message,type='success'){const container=document.querySelector('#toast-container');if(!container)return;const icon=type==='error'?'<svg class="toast-icon h-4 w-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>':'<svg class="toast-icon h-4 w-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>';const toast=document.createElement('div');toast.className=`toast toast-${type==='error'?'error':'success'}`;toast.innerHTML=`${icon}<span>${escapeHtml(message)}</span>`;container.appendChild(toast);requestAnimationFrame(()=>toast.classList.add('toast-show'));setTimeout(()=>{toast.classList.remove('toast-show');setTimeout(()=>toast.remove(),250);},2600);}
+   function formatNoteDate(iso){const d=new Date(iso);return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
+   function renderNotes(){const container=document.querySelector('#note-list');if(!container)return;notes.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));container.innerHTML=notes.map(n=>`<article class="note-card rounded-2xl border border-neutral-800/80 bg-neutral-900 p-4" data-id="${n.id}"><div class="flex items-start justify-between gap-3"><div class="min-w-0 flex-1"><h3 class="font-medium truncate">${escapeHtml(n.title)}</h3><p class="mt-1 text-xs text-neutral-500">${formatNoteDate(n.createdAt)}</p></div><button class="delete-note shrink-0 grid h-7 w-7 place-items-center rounded-lg bg-neutral-800 text-xs text-neutral-500 hover:text-red-400 hover:bg-red-500/10" aria-label="Удалить заметку" type="button">×</button></div>${n.content?`<p class="mt-3 whitespace-pre-wrap text-sm text-neutral-300 line-clamp-4">${escapeHtml(n.content)}</p>`:''}</article>`).join('')||emptyStateHtml({title:'Заметок пока нет',subtitle:'Сохраните первую заметку о наблюдениях',ctaLabel:'+ Добавить заметку',ctaTarget:'notes'});container.querySelectorAll('.delete-note').forEach(btn=>{btn.onclick=e=>{e.stopPropagation();const id=btn.closest('.note-card').dataset.id;if(confirm('Удалить заметку?')){notes=notes.filter(n=>n.id!==id);saveData();renderNotes();}};});}
+   function renderApp(){normalizeSessions();saveData();updateDashboard();render();renderSessions();renderTopObjects();renderTonightBest();renderNotes();renderWeather();}
+   const OPENWEATHER_API_KEY='YOUR_OPENWEATHERMAP_API_KEY';
+   let weatherData=null;
+   let weatherRaw=null;
+   let weatherDayIndex=0;
+   let weatherCoords=null;
+   let weatherProvider=localStorage.getItem('weatherProvider')||'open-meteo';
+   function verdictTone(v){if(v==='Отлично')return{border:'border-blue-500/30',bg:'bg-blue-500/10',text:'text-blue-300',dot:'bg-blue-500'};if(v==='Не подходит')return{border:'border-red-500/30',bg:'bg-red-500/10',text:'text-red-300',dot:'bg-red-500'};return{border:'border-neutral-700',bg:'bg-neutral-900',text:'text-neutral-300',dot:'bg-neutral-500'};}
+   function cloudTone(pct){return pct<30?'text-green-400':pct<70?'text-yellow-500':'text-red-500';}
+   function renderWeather(){const w=weatherData;if(!w)return;const tone=verdictTone(w.summary.verdict);const nightLabel=w.night_date?`Ночь ${formatWeekdayRu(w.night_date)}, ${formatDateRu(w.night_date)} → ${formatDateRu(w.next_date)}`:'';document.querySelector('#weather-summary').innerHTML=`<section class="relative overflow-hidden rounded-2xl border ${tone.border} ${tone.bg} p-5"><div class="flex items-center justify-between gap-3"><div class="flex items-center gap-2"><span class="h-2.5 w-2.5 shrink-0 rounded-full ${tone.dot}"></span><h3 class="text-lg font-medium ${tone.text}">${w.summary.verdict}</h3></div><span class="shrink-0 text-[10px] uppercase tracking-[.2em] text-neutral-500">ASI 2600MC Air</span></div><p class="mt-1 text-xs font-medium text-neutral-300">${nightLabel}</p><p class="mt-2 text-sm text-neutral-400">${w.summary.verdict_reason}</p><div class="mt-4 grid grid-cols-2 gap-3 text-xs"><div class="rounded-xl bg-black/40 p-3"><span class="block text-[10px] text-neutral-500">Окно истинной темноты</span><b class="mt-1 block text-sm text-white">${w.summary.true_dark_window}</b></div><div class="rounded-xl bg-black/40 p-3"><span class="block text-[10px] text-neutral-500">Фаза Луны</span><b class="mt-1 block text-sm text-white">${w.summary.moon_phase}</b></div></div></section>`;const warnings=w.warnings||[];document.querySelector('#weather-warnings').innerHTML=warnings.map(msg=>`<div class="flex items-start gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-200"><svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a1 1 0 0 0 .86 1.5h18.64a1 1 0 0 0 .86-1.5L13.71 3.86a1 1 0 0 0-1.72 0Z"/></svg><span>${msg}</span></div>`).join('');const rangeEl=document.querySelector('#weather-hourly-range');if(rangeEl)rangeEl.textContent=(w.sunset_str&&w.sunrise_str)?`(${w.sunset_str} → ${w.sunrise_str})`:'';const hours=w.hourly_forecast||[];document.querySelector('#weather-hourly').innerHTML=hours.map(h=>`<article class="rounded-2xl border border-neutral-800/80 bg-neutral-900 p-4"><div class="flex items-center justify-between"><span class="text-sm font-medium">${h.time}${h.datePart&&h.datePart!==w.night_date?' <span class=\"text-[10px] text-neutral-500\">('+formatDateRu(h.datePart)+')</span>':''}</span><div class="flex items-center gap-2">${h.dew_warning?'<span class="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-300">Роса</span>':''}${h.wind_warning?'<span class="rounded-full border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 text-[10px] text-orange-300">Ветер</span>':''}</div></div><div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs"><div class="rounded-lg bg-black p-2"><b class="block text-white">${h.dew_point_c}°C</b><span class="text-neutral-600">Точка росы</span></div><div class="rounded-lg bg-black p-2"><b class="block ${cloudTone(h.clouds.total)}">${h.clouds.total}%</b><span class="text-neutral-600">Облачность</span></div><div class="rounded-lg bg-black p-2"><b class="block text-white">${h.wind_ms}м/с</b><span class="text-neutral-600">Ветер</span></div></div><div class="mt-2 flex justify-between text-[10px] text-neutral-500"><span>Низк. <b class="font-medium text-neutral-300">${h.clouds.low}%</b></span><span>Средн. <b class="font-medium text-neutral-300">${h.clouds.mid}%</b></span><span>Выс. <b class="font-medium text-neutral-300">${h.clouds.high}%</b></span></div></article>`).join('')||'<p class="py-8 text-center text-sm text-neutral-600">Нет данных прогноза</p>';}
+ search.oninput=renderApp;document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>{let a=x===b;x.classList.toggle('border-blue-500',a);x.classList.toggle('bg-blue-500/10',a);x.classList.toggle('text-blue-300',a);x.classList.toggle('border-neutral-800',!a);x.classList.toggle('text-neutral-500',!a)});renderApp()});
+ document.querySelectorAll('.type-filter').forEach(b=>b.onclick=()=>{dashboardTypeFilter=dashboardTypeFilter===b.dataset.typeFilter?'Все':b.dataset.typeFilter;updateDashboard();});
+ document.querySelector('#exposure-donut').onclick=()=>{const id=document.querySelector('#exposure-donut').dataset.bestId;if(!id)return;const object=objects.find(o=>o.id===id);if(object)openDetails(object);};
+ const detail=document.querySelector('#object-dialog'),create=document.querySelector('#create-dialog'),settingsDialog=document.querySelector('#settings-dialog'),sessionDialog=document.querySelector('#session-dialog'),noteDialog=document.querySelector('#note-dialog');
+  function displayDate(value){return new Date(`${value}T12:00:00`).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'});}
+   let sessionGroupBy='year',sessionValueFilter='Все';
+   function sessionFilterValues(s){if(s.cameraType==='mono'&&Array.isArray(s.channels)&&s.channels.length)return[...new Set(s.channels.map(c=>c.channel))];return[s.filter||'Без фильтра'];}
+   function getSessionGroupOptions(groupBy){if(groupBy==='object')return objects.slice().sort((a,b)=>objectLabel(a).localeCompare(objectLabel(b),'ru')).map(o=>({value:o.id,label:objectLabel(o)}));if(groupBy==='filter'){const set=new Set();sessions.forEach(s=>sessionFilterValues(s).forEach(v=>set.add(v)));return[...set].sort((a,b)=>a.localeCompare(b,'ru')).map(v=>({value:v,label:v}));}return[];}
+   function renderSessionValueFilter(){const container=document.querySelector('#session-value-filter');if(!container)return;if(sessionGroupBy==='year'){container.classList.add('hidden');container.innerHTML='';return;}const options=getSessionGroupOptions(sessionGroupBy);container.classList.toggle('hidden',options.length===0);const allActive=sessionValueFilter==='Все';container.innerHTML=`<button type="button" data-value-filter="Все" class="session-value-btn shrink-0 rounded-full border px-4 py-2 text-xs transition ${allActive?'border-blue-500 bg-blue-500/10 text-blue-300':'border-neutral-800 text-neutral-500'}">Все</button>`+options.map(o=>{const active=sessionValueFilter===o.value;return `<button type="button" data-value-filter="${escapeHtml(o.value)}" class="session-value-btn shrink-0 rounded-full border px-4 py-2 text-xs transition ${active?'border-blue-500 bg-blue-500/10 text-blue-300':'border-neutral-800 text-neutral-500'}">${escapeHtml(o.label)}</button>`}).join('');container.querySelectorAll('.session-value-btn').forEach(b=>b.onclick=()=>{sessionValueFilter=b.dataset.valueFilter;renderSessions();});}
+   function sessionMatchesValueFilter(s){if(sessionGroupBy==='year'||sessionValueFilter==='Все')return true;if(sessionGroupBy==='object')return s.objectId===sessionValueFilter;if(sessionGroupBy==='filter')return sessionFilterValues(s).includes(sessionValueFilter);return true;}
+   function sessionGroupKey(s){if(sessionGroupBy==='object'){const o=objects.find(x=>x.id===s.objectId);return o?objectLabel(o):'Удаленный объект';}if(sessionGroupBy==='filter')return sessionFilterValues(s).join(', ')||'Без фильтра';return s.date.slice(0,4);}
+   function renderSessions(){document.querySelectorAll('.session-group-btn').forEach(b=>{const active=b.dataset.groupBy===sessionGroupBy;b.classList.toggle('border-blue-500',active);b.classList.toggle('bg-blue-500/10',active);b.classList.toggle('text-blue-300',active);b.classList.toggle('border-neutral-800',!active);b.classList.toggle('text-neutral-500',!active)});renderSessionValueFilter();const scoped=sessions.filter(sessionMatchesValueFilter);const grouped=scoped.slice().sort((a,b)=>b.date.localeCompare(a.date)).reduce((all,s)=>{const key=sessionGroupKey(s);(all[key]??=[]).push(s);return all},{});const groupEntries=Object.entries(grouped).sort((a,b)=>sessionGroupBy==='year'?b[0].localeCompare(a[0]):a[0].localeCompare(b[0],'ru'));document.querySelector('#session-list').innerHTML=groupEntries.map(([key,items])=>`<div><h2 class="mb-3 text-2xl font-medium text-neutral-200">${escapeHtml(key)}</h2><div class="space-y-3">${items.map(s=>{const o=objects.find(x=>x.id===s.objectId);return `<article class="session-card overflow-hidden rounded-2xl border border-neutral-800/80 bg-neutral-900" data-id="${s.id}"><button type="button" class="session-toggle flex w-full items-center gap-3 p-4 text-left"><div class="min-w-0 flex-1"><p class="text-xs text-neutral-500 flex flex-wrap items-center gap-1.5">${displayDate(s.date)}${s.cameraType==='mono'&&Array.isArray(s.channels)?s.channels.map(c=>{const info=channelInfo(c.channel);return `<span class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px]" style="border-color:${info.color}55;color:${info.color}"><i class="h-1.5 w-1.5 rounded-full" style="background:${info.color}"></i>${c.channel}</span>`}).join(''):''}</p><h3 class="mt-1 truncate font-medium">${o?objectLabel(o):'Удаленный объект'}</h3></div><strong class="shrink-0 text-sm text-blue-400">${formatSeconds(sessionDuration(s))}</strong><span class="session-arrow text-neutral-500 transition">⌄</span></button><div class="session-details hidden border-t border-neutral-800 px-4 pb-4 pt-3"><div class="grid grid-cols-2 gap-x-4 gap-y-3 text-xs"><p><span class="block text-neutral-600">Локация</span><b>${s.location||'Не указана'}</b></p><p><span class="block text-neutral-600">Bortle</span><b>${s.bortle}</b></p><p><span class="block text-neutral-600">Сетап</span><b>${s.setup}</b></p><p><span class="block text-neutral-600">Камера</span><b>${s.camera}</b></p><p><span class="block text-neutral-600">${s.cameraType==='mono'?'Тип камеры':'Фильтр'}</span><b>${s.cameraType==='mono'?'Монохром':(s.filter||'Без фильтра')}</b></p><p><span class="block text-neutral-600">Время начала</span><b>${s.start||'Не указано'}</b></p></div>${s.cameraType==='mono'&&Array.isArray(s.channels)?`<div class="mt-3 space-y-1.5">${s.channels.map(c=>{const info=channelInfo(c.channel);return `<div class="flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" style="border-color:${info.color}40;background:${info.color}0d"><i class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:${info.color}"></i><b class="w-10 shrink-0" style="color:${info.color}">${c.channel}</b><span class="text-neutral-400">${c.exposure}с</span><span class="ml-auto flex gap-3 text-neutral-400"><span>L:<b class="text-neutral-200">${c.light}</b></span><span>D:<b class="text-neutral-200">${c.dark}</b></span><span>F:<b class="text-neutral-200">${c.flat}</b></span></span></div>`}).join('')}</div>`:`<div class="mt-4 grid grid-cols-4 gap-2 text-center text-xs">${[['Light',s.light],['Dark',s.dark],['Bias',s.bias],['Flat',s.flat]].map(x=>`<div class="rounded-lg bg-black p-2"><b class="block text-blue-400">${x[1]}</b><span class="text-neutral-600">${x[0]}</span>${x[0]==='Flat'&&s.flat_time?`<span class="mt-1 block text-[10px] text-neutral-500">Flat · ${s.flat_time}</span>`:''}</div>`).join('')}</div>`}${s.notes?`<p class="mt-4 rounded-xl border border-neutral-800 p-3 text-xs leading-relaxed text-neutral-400">${s.notes}</p>`:''}<div class="mt-4 grid grid-cols-2 gap-2"><button type="button" class="edit-session h-11 w-full rounded-xl border border-neutral-700 text-xs text-neutral-200 hover:bg-neutral-800">Редактировать</button><button type="button" class="delete-session h-11 w-full rounded-xl border border-red-500/30 text-xs text-red-400 hover:bg-red-500/10">Удалить сессию</button></div></div></article>`}).join('')}</div></div>`).join('')||(sessions.length?emptyStateHtml({title:'Сессии не найдены',subtitle:'Попробуйте другую группировку или фильтр'}):emptyStateHtml({title:'Сессий пока нет',subtitle:'Запишите первую сессию наблюдений',ctaLabel:'+ Добавить сессию',ctaTarget:'sessions'}));document.querySelectorAll('.session-toggle').forEach(b=>b.onclick=()=>{const details=b.nextElementSibling;details.classList.toggle('hidden');b.querySelector('.session-arrow').classList.toggle('rotate-180')});document.querySelectorAll('.edit-session').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.closest('.session-card').dataset.id,s=sessions.find(x=>x.id===id);if(s)openSession('',s);});document.querySelectorAll('.delete-session').forEach(b=>b.onclick=e=>{e.stopPropagation();sessions=sessions.filter(s=>s.id!==b.closest('.session-card').dataset.id);saveData();showToast('Сессия удалена');renderApp()});}
+   document.querySelectorAll('.session-group-btn').forEach(b=>b.onclick=()=>{sessionGroupBy=b.dataset.groupBy;sessionValueFilter='Все';renderSessions();});
+  function openSettings(){const f=document.querySelector('#settings-form');f.elements.bortle.value=settings.bortle;f.elements.location.value=settings.location;draftSetups=settings.setups.slice();draftCameras=settings.cameras.slice();draftFilters=settings.filters.slice();renderEquipmentList('#setups-list',draftSetups);renderEquipmentList('#cameras-list',draftCameras);renderEquipmentList('#filters-list',draftFilters);settingsDialog.showModal();}
+  document.querySelector('#add-setup-btn').onclick=()=>{const val=prompt('Новый сетап');if(val&&val.trim()){draftSetups.push(val.trim());renderEquipmentList('#setups-list',draftSetups);}};
+  document.querySelector('#add-camera-btn').onclick=()=>{const val=prompt('Новая камера');if(val&&val.trim()){draftCameras.push(val.trim());renderEquipmentList('#cameras-list',draftCameras);}};
+   document.querySelector('#add-filter-btn').onclick=()=>{const val=prompt('Новый фильтр');if(val&&val.trim()){draftFilters.push(val.trim());renderEquipmentList('#filters-list',draftFilters);}};
+   document.querySelector('#export-data-btn').onclick=()=>{const data={version:SCHEMA_VERSION,objects,sessions,notes,settings};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`pashastro-backup-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);};
+   document.querySelector('#import-data-input').onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!data||!Array.isArray(data.objects)||!Array.isArray(data.sessions)){alert('Файл повреждён или имеет неверный формат.');return;}if(!confirm('Импорт полностью заменит текущие объекты, сессии, заметки и настройки. Продолжить?')){return;}objects=data.objects;sessions=data.sessions;notes=Array.isArray(data.notes)?data.notes:[];settings={...defaultSettings,...(data.settings||{})};if(!Array.isArray(settings.setups)||!settings.setups.length)settings.setups=defaultSettings.setups.slice();if(!Array.isArray(settings.cameras)||!settings.cameras.length)settings.cameras=defaultSettings.cameras.slice();if(!Array.isArray(settings.filters)||!settings.filters.length)settings.filters=defaultSettings.filters.slice();localStorage.setItem('settings',JSON.stringify(settings));saveData();settingsDialog.close();renderApp();alert('Данные успешно импортированы.');}catch(err){alert('Не удалось прочитать файл: '+err.message);}finally{e.target.value='';}};reader.readAsText(file);};
+  let sessionChannels=[];
+  function newChannelRow(channelId){const used=sessionChannels.map(c=>c.channel);const free=CHANNELS.find(c=>!used.includes(c.id));return {channel:channelId||(free?free.id:CHANNELS[0].id),exposure:120,light:0,dark:0,flat:0};}
+  function renderChannelRows(){const container=document.querySelector('#channels-container');if(!container)return;container.innerHTML=sessionChannels.map((c,idx)=>{const info=channelInfo(c.channel);return `<div class="channel-row rounded-xl border p-3 space-y-2" style="border-color:${info.color}55;background:${info.color}0d" data-idx="${idx}"><div class="flex items-center justify-between gap-2"><label class="flex-1"><select class="channel-select h-9 w-full rounded-lg border border-neutral-800 bg-black px-2 text-xs font-medium outline-none" style="color:${info.color}">${CHANNELS.map(ch=>`<option value="${ch.id}" ${ch.id===c.channel?'selected':''} style="color:${ch.color}">${ch.label}</option>`).join('')}</select></label><span class="channel-dot h-3 w-3 shrink-0 rounded-full" style="background:${info.color}"></span><button type="button" class="delete-channel-row grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-900 text-neutral-500 hover:bg-red-500/10 hover:text-red-400" aria-label="Удалить канал">×</button></div><div class="grid grid-cols-4 gap-2"><label class="block text-[10px] text-neutral-500">Выдержка (с)<input type="number" min="0" class="channel-exposure mt-1 h-9 w-full rounded-lg border border-neutral-800 bg-black px-2 text-xs outline-none" value="${c.exposure}"></label><label class="block text-[10px] text-neutral-500">Light<input type="number" min="0" class="channel-light mt-1 h-9 w-full rounded-lg border border-neutral-800 bg-black px-2 text-xs outline-none" value="${c.light}"></label><label class="block text-[10px] text-neutral-500">Dark<input type="number" min="0" class="channel-dark mt-1 h-9 w-full rounded-lg border border-neutral-800 bg-black px-2 text-xs outline-none" value="${c.dark}"></label><label class="block text-[10px] text-neutral-500">Flat<input type="number" min="0" class="channel-flat mt-1 h-9 w-full rounded-lg border border-neutral-800 bg-black px-2 text-xs outline-none" value="${c.flat}"></label></div></div>`}).join('')||'<p class="py-3 text-center text-xs text-neutral-600">Добавьте хотя бы один канал</p>';
+   container.querySelectorAll('.channel-row').forEach(row=>{
+    const idx=Number(row.dataset.idx);
+    row.querySelector('.channel-select').onchange=e=>{sessionChannels[idx].channel=e.target.value;renderChannelRows();};
+    row.querySelector('.channel-exposure').oninput=e=>{sessionChannels[idx].exposure=Number(e.target.value)||0;};
+    row.querySelector('.channel-light').oninput=e=>{sessionChannels[idx].light=Number(e.target.value)||0;};
+    row.querySelector('.channel-dark').oninput=e=>{sessionChannels[idx].dark=Number(e.target.value)||0;};
+    row.querySelector('.channel-flat').oninput=e=>{sessionChannels[idx].flat=Number(e.target.value)||0;};
+    row.querySelector('.delete-channel-row').onclick=()=>{sessionChannels.splice(idx,1);renderChannelRows();};
+   });
+  }
+  document.querySelector('#add-channel-btn').onclick=()=>{sessionChannels.push(newChannelRow());renderChannelRows();};
+  function setCameraType(type){const f=document.querySelector('#session-form');f.elements.cameraType.value=type;document.querySelectorAll('.camera-type-btn').forEach(btn=>{const active=btn.dataset.cameraType===type;btn.classList.toggle('border-blue-500',active);btn.classList.toggle('bg-blue-500/10',active);btn.classList.toggle('text-blue-300',active);btn.classList.toggle('border-neutral-800',!active);btn.classList.toggle('text-neutral-500',!active)});document.querySelector('#color-fields').classList.toggle('hidden',type==='mono');document.querySelector('#mono-fields').classList.toggle('hidden',type!=='mono');f.elements.filter.required=type!=='mono';f.elements.exposure.required=type!=='mono';if(type==='mono'&&!sessionChannels.length){sessionChannels=[newChannelRow('Ha'),newChannelRow('OIII'),newChannelRow('SII')];renderChannelRows();}}
+  document.querySelectorAll('.camera-type-btn').forEach(btn=>btn.onclick=()=>setCameraType(btn.dataset.cameraType));
+  function openSession(objectId='',sessionToEdit=null){const f=document.querySelector('#session-form');f.reset();f.elements.catalog.innerHTML=objects.map(x=>`<option value="${x.id}">${objectLabel(x)}</option>`).join('');f.elements.date.max=new Date().toISOString().split('T')[0];const titleEl=document.querySelector('#session-dialog-title'),submitEl=document.querySelector('#session-submit');if(sessionToEdit){titleEl.textContent='Редактировать сессию';submitEl.textContent='Сохранить изменения';f.dataset.editId=sessionToEdit.id;f.elements.catalog.value=sessionToEdit.objectId;f.elements.date.value=sessionToEdit.date||'';f.elements.start.value=sessionToEdit.start||'';f.elements.location.value=sessionToEdit.location||'';f.elements.bortle.value=sessionToEdit.bortle||'';populateSelectOptions(f.elements.filter,settings.filters,sessionToEdit.filter||'');populateSelectOptions(f.elements.setup,settings.setups,sessionToEdit.setup||'');populateSelectOptions(f.elements.camera,settings.cameras,sessionToEdit.camera||'');f.elements.exposure.value=sessionToEdit.exposure||0;f.elements.light.value=sessionToEdit.light||0;f.elements.dark.value=sessionToEdit.dark||0;f.elements.bias.value=sessionToEdit.bias||0;f.elements.flat.value=sessionToEdit.flat||0;f.elements.flat_time.value=sessionToEdit.flat_time||'';f.elements.notes.value=sessionToEdit.notes||'';sessionChannels=(sessionToEdit.cameraType==='mono'&&Array.isArray(sessionToEdit.channels)&&sessionToEdit.channels.length)?sessionToEdit.channels.map(c=>({...c})):[];renderChannelRows();setCameraType(sessionToEdit.cameraType==='mono'?'mono':'color');}else{titleEl.textContent='Новая сессия';submitEl.textContent='Сохранить сессию';delete f.dataset.editId;populateSelectOptions(f.elements.setup,settings.setups);populateSelectOptions(f.elements.camera,settings.cameras);populateSelectOptions(f.elements.filter,settings.filters);f.elements.bortle.value=settings.bortle;f.elements.location.value=settings.location;f.elements.date.value=new Date().toISOString().slice(0,10);if(objectId)f.elements.catalog.value=objectId;sessionChannels=[];renderChannelRows();setCameraType('color');}sessionDialog.showModal();}
+  function openObjectForm(object=null){const f=document.querySelector('#create-form');f.reset();document.querySelector('#create-title').textContent=object?'Редактировать объект':'Новый объект';document.querySelector('#create-submit').textContent=object?'Сохранить изменения':'Добавить объект';f.dataset.editCatalog=object?object.catalog:'';if(object){f.elements.catalog.value=object.catalog;f.elements.name.value=object.name;f.elements.type.value=object.type;f.elements.status.value=object.status;f.elements.notes.value=object.notes||''}create.showModal();}
+    function openDetails(o){const history=sessions.filter(s=>s.catalog===o.catalog).sort((a,b)=>b.date.localeCompare(a.date));document.querySelector('#dialog-title').textContent=objectLabel(o);document.querySelector('#dialog-content').innerHTML=`<div class="space-y-5"><div class="grid grid-cols-3 gap-2"><div class="rounded-xl bg-neutral-900 p-3"><span class="block text-[10px] text-neutral-500">Тип</span><b class="mt-1 block text-xs">${o.type}</b></div><div class="rounded-xl bg-neutral-900 p-3"><span class="block text-[10px] text-neutral-500">Время</span><b class="mt-1 block text-xs text-blue-400">${formatSeconds(o.seconds||0)}</b></div><div class="rounded-xl bg-neutral-900 p-3"><span class="block text-[10px] text-neutral-500">Сессии</span><b class="mt-1 block text-xs">${o.sessions}</b></div></div><div><h3 class="mb-3 text-sm font-medium">История сессий объекта</h3><div class="space-y-2">${history.map(s=>`<div class="object-history overflow-hidden rounded-xl bg-neutral-900" data-session-id="${s.id}"><button type="button" class="history-toggle flex w-full items-center justify-between p-3 text-left text-xs"><span>${displayDate(s.date)}${s.start?` · ${s.start}`:''}</span><span class="flex items-center gap-3"><b class="text-blue-400">${formatSeconds(sessionDuration(s))}</b><span class="history-arrow text-neutral-500">⌄</span></span></button><div class="history-details hidden border-t border-neutral-800 p-3"><div class="grid grid-cols-2 gap-3 text-xs"><p><span class="block text-neutral-600">Сетап</span><b>${s.setup}</b></p><p><span class="block text-neutral-600">Камера</span><b>${s.camera}</b></p><p><span class="block text-neutral-600">${s.cameraType==='mono'?'Тип камеры':'Фильтр'}</span><b>${s.cameraType==='mono'?'Монохром':(s.filter||'Без фильтра')}</b></p>${s.cameraType!=='mono'?`<p><span class="block text-neutral-600">Выдержка лайта</span><b>${s.exposure} сек</b></p>`:''}</div>${s.cameraType==='mono'&&Array.isArray(s.channels)?`<div class="mt-3 space-y-1.5">${s.channels.map(c=>{const info=channelInfo(c.channel);return `<div class="flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px]" style="border-color:${info.color}40;background:${info.color}0d"><i class="h-2 w-2 shrink-0 rounded-full" style="background:${info.color}"></i><b class="w-9 shrink-0" style="color:${info.color}">${c.channel}</b><span class="text-neutral-400">${c.exposure}с</span><span class="ml-auto flex gap-2 text-neutral-400"><span>L:<b class="text-neutral-200">${c.light}</b></span><span>D:<b class="text-neutral-200">${c.dark}</b></span><span>F:<b class="text-neutral-200">${c.flat}</b></span></span></div>`}).join('')}</div>`:`<div class="mt-3 grid grid-cols-4 gap-2 text-center text-[11px]">${[['Light',s.light],['Dark',s.dark],['Bias',s.bias],['Flat',s.flat]].map(x=>`<div class="rounded-lg bg-black p-2"><b class="block text-blue-400">${x[1]}</b><span class="text-neutral-600">${x[0]}</span></div>`).join('')}</div>`}${s.notes?`<p class="mt-3 rounded-lg border border-neutral-800 p-3 text-xs leading-relaxed text-neutral-400">${s.notes}</p>`:''}</div></div>`).join('')||'<p class="text-xs text-neutral-600">Сессий пока нет</p>'}</div></div><div><h3 class="mb-2 text-sm font-medium">Общие заметки по объекту</h3><p class="rounded-xl border border-neutral-800 p-3 text-xs leading-relaxed text-neutral-400">${o.notes||'Глобальные планы пока не добавлены.'}</p></div><div class="grid grid-cols-2 gap-2"><button id="edit-object" class="h-11 rounded-xl border border-neutral-700 text-sm hover:bg-neutral-900" type="button">Редактировать</button><button id="delete-object" class="h-11 rounded-xl border border-red-500/30 text-sm text-red-400 hover:bg-red-500/10" type="button">Удалить объект</button></div><button id="add-object-session" class="h-11 w-full rounded-xl bg-blue-500 text-sm font-medium hover:bg-blue-400" type="button">+ Добавить сессию</button></div>`;document.querySelectorAll('.history-toggle').forEach(b=>b.onclick=()=>{b.nextElementSibling.classList.toggle('hidden');b.querySelector('.history-arrow').classList.toggle('rotate-180')});document.querySelector('#add-object-session').onclick=()=>{detail.close();openSession(o.catalog)};document.querySelector('#edit-object').onclick=()=>{detail.close();openObjectForm(o)};document.querySelector('#delete-object').onclick=()=>{if(confirm('Удалить объект и все привязанные к нему сессии?')){objects=objects.filter(x=>x.catalog!==o.catalog);sessions=sessions.filter(s=>s.catalog!==o.catalog);localStorage.setItem('objects',JSON.stringify(objects));localStorage.setItem('sessions',JSON.stringify(sessions));detail.close();renderApp()}};detail.showModal();}
+  document.querySelectorAll('select[name="bortle"]').forEach(select=>select.innerHTML=Array.from({length:9},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''));document.querySelectorAll('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());document.querySelector('#open-settings').onclick=openSettings;document.querySelector('#toggle-red-light').onclick=toggleRedLightMode;document.querySelector('#open-create').onclick=()=>openObjectForm();document.querySelector('#open-session').onclick=()=>openSession();document.querySelector('#open-create-fab').onclick=()=>{if(currentTab==='objects')openObjectForm();else if(currentTab==='notes')openNoteForm();else openSession();};document.querySelector('#create-form').onsubmit=e=>{e.preventDefault();let f=new FormData(e.target),catalog=f.get('catalog').trim(),name=f.get('name').trim(),oldCatalog=e.target.dataset.editCatalog;if(objects.some(o=>o.catalog.toLowerCase()===catalog.toLowerCase()&&o.catalog.toLowerCase()!==String(oldCatalog||'').toLowerCase())){alert('Объект с таким каталогом уже существует.');return}if(oldCatalog){const object=objects.find(o=>o.catalog===oldCatalog);object.catalog=catalog;object.name=name;object.type=f.get('type');object.status=f.get('status');object.notes=f.get('notes')||'';sessions.forEach(s=>{if(s.catalog===oldCatalog)s.catalog=catalog})}else objects.unshift({catalog,name,type:f.get('type'),minutes:0,seconds:0,sessions:0,status:f.get('status'),notes:f.get('notes')||'',color:'blue'});localStorage.setItem('objects',JSON.stringify(objects));localStorage.setItem('sessions',JSON.stringify(sessions));e.target.reset();showToast(oldCatalog?'Объект обновлён':'Объект добавлен');delete e.target.dataset.editCatalog;create.close();switchTab('objects');renderApp()};document.querySelector('#settings-form').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);settings={bortle:f.get('bortle'),location:f.get('location'),setups:draftSetups.slice(),cameras:draftCameras.slice(),filters:draftFilters.slice()};localStorage.setItem('settings',JSON.stringify(settings));settingsDialog.close();renderApp()};switchTab('home');renderApp();
+  document.querySelector('#session-form').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),editId=e.target.dataset.editId,cameraType=f.get('cameraType')==='mono'?'mono':'color';const dateValue=f.get('date');const todayStr=new Date().toISOString().split('T')[0];if(!dateValue){showToast('Укажите дату сессии.','error');return;}const dateObj=new Date(`${dateValue}T00:00:00`);if(Number.isNaN(dateObj.getTime())){showToast('Некорректная дата сессии.','error');return;}if(dateValue>todayStr){showToast('Дата сессии не может быть в будущем.','error');return;}const startValue=f.get('start');if(startValue){if(!/^([01]\d|2[0-3]):([0-5]\d)$/.test(startValue)){showToast('Некорректное время начала съёмки (ожидается ЧЧ:ММ).','error');return;}if(dateValue===todayStr){const now=new Date();const nowStr=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;if(startValue>nowStr){showToast('Время начала съёмки не может быть в будущем.','error');return;}}}const numericFields=[['exposure','Выдержка'],['light','Light'],['dark','Dark'],['bias','Bias'],['flat','Flat']];for(const[fieldName,label]of numericFields){const raw=f.get(fieldName);if(raw===null||raw==='')continue;const num=Number(raw);if(Number.isNaN(num)||num<0){showToast(`Поле "${label}" не может быть отрицательным.`,'error');return;}}if(cameraType==='mono'&&sessionChannels.some(c=>[c.exposure,c.light,c.dark,c.flat].some(v=>Number(v)<0))){showToast('Значения каналов не могут быть отрицательными.','error');return;}if(cameraType==='mono'&&!sessionChannels.length){showToast('Добавьте хотя бы один канал.','error');return;}const channels=cameraType==='mono'?sessionChannels.map(c=>({channel:c.channel,exposure:Number(c.exposure)||0,light:Number(c.light)||0,dark:Number(c.dark)||0,flat:Number(c.flat)||0})):[];const totals=cameraType==='mono'?channels.reduce((sum,c)=>({light:sum.light+c.light,flat:sum.flat+c.flat,dark:sum.dark+c.dark}),{light:0,flat:0,dark:0}):null;const sessionData={objectId:f.get('catalog'),cameraType,channels,filter:cameraType==='mono'?'':f.get('filter'),exposure:cameraType==='mono'?0:(Number(f.get('exposure'))||0),light:cameraType==='mono'?totals.light:(Number(f.get('light'))||0),dark:cameraType==='mono'?totals.dark:(Number(f.get('dark'))||0),flat:cameraType==='mono'?totals.flat:(Number(f.get('flat'))||0),date:f.get('date'),start:f.get('start'),location:f.get('location'),bortle:f.get('bortle'),setup:f.get('setup'),camera:f.get('camera'),bias:cameraType==='mono'?0:(Number(f.get('bias'))||0),flat_time:cameraType==='mono'?'':(f.get('flat_time')||''),notes:f.get('notes')||''};if(!objects.some(o=>o.id===sessionData.objectId))return;if(editId){const idx=sessions.findIndex(s=>s.id===editId);if(idx!==-1)sessions[idx]={...sessions[idx],...sessionData};delete e.target.dataset.editId;}else{sessions.push({id:createId(),...sessionData});}saveData();showToast(editId?'Сессия обновлена':'Сессия сохранена');sessionDialog.close();switchTab('sessions');renderApp()};
+  function openNoteForm(){const f=document.querySelector('#note-form');f.reset();document.querySelector('#note-title').textContent='Новая заметка';document.querySelector('#note-submit').textContent='Создать заметку';noteDialog.showModal();f.elements.title.focus();}
+  document.querySelector('#open-note').onclick=openNoteForm;
+  document.querySelector('#note-form').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),title=f.get('title').trim(),content=f.get('content').trim();if(!title)return;const now=new Date().toISOString();notes.unshift({id:`note-${Date.now()}-${Math.random().toString(16).slice(2)}`,title,content,createdAt:now,updatedAt:now});saveData();e.target.reset();noteDialog.close();renderNotes();};
+ 
+/* ===================== Динамическая погода / астрономия ===================== */
+const CITY_PRESETS=[
+ {name:'Москва',lat:55.7558,lon:37.6173},
+ {name:'Руза',lat:55.7266,lon:36.1895},
+ {name:'Можайск',lat:55.5034,lon:36.0044},
+ {name:'Элиста',lat:46.3097,lon:44.2732},
+ {name:'Санкт-Петербург',lat:59.9343,lon:30.3351},
+];
+let weatherRequestId=0;
+
+function radDeg(d){return d*Math.PI/180;}
+function degRad(r){return r*180/Math.PI;}
+function toJulian(dateUTC){return dateUTC.getTime()/86400000+2440587.5;}
+function sunEquatorial(jd){
+ const T=(jd-2451545.0)/36525.0;
+ const L0=(280.46646+T*(36000.76983+T*0.0003032))%360;
+ const M=(357.52911+T*(35999.05029-0.0001537*T))%360;
+ const Mrad=radDeg(M);
+ const C=(1.914602-T*(0.004817+0.000014*T))*Math.sin(Mrad)+(0.019993-0.000101*T)*Math.sin(2*Mrad)+0.000289*Math.sin(3*Mrad);
+ const trueLong=L0+C;
+ const omega=125.04-1934.136*T;
+ const lambda=trueLong-0.00569-0.00478*Math.sin(radDeg(omega));
+ const epsilon0=23+(26+((21.448-T*(46.8150+T*(0.00059-T*0.001813))))/60)/60;
+ const epsilon=epsilon0+0.00256*Math.cos(radDeg(omega));
+ const lambdaRad=radDeg(lambda),epsRad=radDeg(epsilon);
+ const ra=degRad(Math.atan2(Math.cos(epsRad)*Math.sin(lambdaRad),Math.cos(lambdaRad)));
+ const dec=degRad(Math.asin(Math.sin(epsRad)*Math.sin(lambdaRad)));
+ return {ra:(ra+360)%360,dec};
+}
+
+function gmst(jd){
+ const T=(jd-2451545.0)/36525.0;
+ let g=280.46061837+360.98564736629*(jd-2451545.0)+0.000387933*T*T-(T*T*T)/38710000.0;
+ g=g%360;if(g<0)g+=360;return g;
+}
+
+function altitude(raDeg,decDeg,jd,latDeg,lonDeg){
+ const gmstDeg=gmst(jd);
+ const lst=(gmstDeg+lonDeg)%360;
+ let H=lst-raDeg;
+ H=((H+180)%360+360)%360-180;
+ const Hrad=radDeg(H),latRad=radDeg(latDeg),decRad=radDeg(decDeg);
+ const sinAlt=Math.sin(latRad)*Math.sin(decRad)+Math.cos(latRad)*Math.cos(decRad)*Math.cos(Hrad);
+ return degRad(Math.asin(sinAlt));
+}
+
+function sunAltitudeAt(dateUTC,lat,lon){
+ const jd=toJulian(dateUTC);
+ const {ra,dec}=sunEquatorial(jd);
+ return altitude(ra,dec,jd,lat,lon);
+}
+
+// Сканирует интервал [startUTC,endUTC] и находит моменты пересечения Солнцем заданных высот.
+// Возвращает массив событий {time: Date, threshold, direction: 'falling'|'rising'}
+function findSunCrossings(startUTC,endUTC,lat,lon,thresholds){
+ const events=[];
+ const stepMs=60000; // 1 минута
+ let prevAlt=sunAltitudeAt(startUTC,lat,lon);
+ let t=new Date(startUTC.getTime()+stepMs);
+ while(t<=endUTC){
+  const alt=sunAltitudeAt(t,lat,lon);
+  for(const th of thresholds){
+   if((prevAlt-th)*(alt-th)<0){
+    events.push({time:new Date(t),threshold:th,direction:alt<prevAlt?'falling':'rising'});
+   }
+  }
+  prevAlt=alt;
+  t=new Date(t.getTime()+stepMs);
+ }
+ return events;
+}
+
+function fmtHM(dateUTC,utcOffsetSeconds){
+ const local=new Date(dateUTC.getTime()+utcOffsetSeconds*1000);
+ const hh=String(local.getUTCHours()).padStart(2,'0');
+ const mm=String(local.getUTCMinutes()).padStart(2,'0');
+ return `${hh}:${mm}`;
+}
+
+// Open-Meteo с timezone=auto отдаёт наивные локальные строки без смещения
+// ("2026-09-02T19:22"). Чтобы получить настоящий момент UTC, интерпретируем
+// строку как если бы она была в UTC, затем вычитаем смещение целевой точки.
+function parseApiLocalToUTC(str,utcOffsetSeconds){
+ const iso=str.length===16?str+':00Z':(str.endsWith('Z')?str:str+'Z');
+ const asUTC=new Date(iso);
+ return new Date(asUTC.getTime()-utcOffsetSeconds*1000);
+}
+
+const MONTHS_RU=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WEEKDAYS_RU=['вс','пн','вт','ср','чт','пт','сб'];
+function formatDateRu(dateStr){ // 'YYYY-MM-DD' -> '5 сентября'
+ const [y,m,d]=dateStr.split('-').map(Number);
+ return `${d} ${MONTHS_RU[m-1]}`;
+}
+function formatWeekdayRu(dateStr){
+ const [y,m,d]=dateStr.split('-').map(Number);
+ const dt=new Date(y,m-1,d);
+ return WEEKDAYS_RU[dt.getDay()];
+}
+
+// Формула Magnus: точка росы (°C) из температуры (°C) и относительной влажности (%)
+function calcDewPoint(tempC,humidity){
+ const a=17.27,b=237.7;
+ const alpha=((a*tempC)/(b+tempC))+Math.log(Math.max(humidity,1)/100);
+ return (b*alpha)/(a-alpha);
+}
+
+function moonPhaseLabel(fraction){
+ // fraction: 0..1, 0/1=новолуние, 0.5=полнолуние
+ const illum=Math.round((1-Math.cos(fraction*2*Math.PI))/2*100);
+ let name;
+ if(fraction<0.02||fraction>0.98)name='Новолуние';
+ else if(fraction<0.23)name='Растущий серп';
+ else if(fraction<0.27)name='Первая четверть';
+ else if(fraction<0.48)name='Растущая';
+ else if(fraction<0.52)name='Полнолуние';
+ else if(fraction<0.73)name='Убывающая';
+ else if(fraction<0.77)name='Последняя четверть';
+ else name='Старый серп';
+ return `${name} (${illum}%)`;
+}
+
+async function fetchWeather(lat,lon){
+ const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&wind_speed_unit=ms&hourly=temperature_2m,dew_point_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_gusts_10m&daily=sunrise,sunset,moonrise,moonset,moon_phase&forecast_days=4`;
+ const res=await fetch(url);
+ if(!res.ok)throw new Error(`Open-Meteo вернул ошибку ${res.status}`);
+ const data=await res.json();
+ if(data.error)throw new Error(data.reason||'Ошибка API Open-Meteo');
+ return data;
+}
+
+// OpenWeatherMap 5-day/3-hour forecast. Возвращает данные, приведённые к структуре
+// hourly-массивов Open-Meteo (time/temperature_2m/dew_point_2m/cloud_cover*/wind_gusts_10m),
+// чтобы их можно было передать в ту же processWeatherData почти без изменений.
+async function fetchOpenWeatherMap(lat,lon){
+ const url=`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=ru`;
+ const res=await fetch(url);
+ if(!res.ok){
+  const body=await res.json().catch(()=>({}));
+  throw new Error(body.message?`OpenWeatherMap: ${body.message}`:`OpenWeatherMap вернул ошибку ${res.status}`);
+ }
+ const data=await res.json();
+ if(String(data.cod)!=='200')throw new Error(data.message||'Ошибка API OpenWeatherMap');
+ return data;
+}
+
+// OWM отдаёт 3-часовые точки в UTC (dt) без учёта локального смещения — приводим
+// к тому же наивно-локальному формату 'YYYY-MM-DDTHH:MM', что и Open-Meteo с timezone=auto,
+// используя timezone_offset (сек) из ответа OWM.
+function buildHourlyFromOWM(owmData){
+ const offsetSec=owmData.city&&typeof owmData.city.timezone==='number'?owmData.city.timezone:0;
+ const time=[],temperature_2m=[],dew_point_2m=[],cloud_cover=[],cloud_cover_low=[],cloud_cover_mid=[],cloud_cover_high=[],wind_gusts_10m=[];
+ for(const item of owmData.list){
+  const localMs=(item.dt+offsetSec)*1000;
+  const localDate=new Date(localMs);
+  const iso=localDate.toISOString().slice(0,16); // 'YYYY-MM-DDTHH:MM', интерпретируется как наивное локальное время
+  const tempC=item.main.temp;
+  const humidity=item.main.humidity;
+  const clouds=typeof item.clouds.all==='number'?item.clouds.all:0;
+  const gust=item.wind&&typeof item.wind.gust==='number'?item.wind.gust:(item.wind?item.wind.speed:0);
+  time.push(iso);
+  temperature_2m.push(tempC);
+  dew_point_2m.push(calcDewPoint(tempC,humidity));
+  cloud_cover.push(clouds);
+  cloud_cover_low.push(clouds);
+  cloud_cover_mid.push(clouds);
+  cloud_cover_high.push(clouds);
+  wind_gusts_10m.push(gust);
+ }
+ return {utc_offset_seconds:offsetSec,time,temperature_2m,dew_point_2m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_gusts_10m};
+}
+
+// Собирает единый объект raw: астрономия (daily: sunrise/sunset/moon...) всегда берётся
+// у Open-Meteo (OWM бесплатный тариф её не отдаёт), а часовые метео-ряды — от выбранного провайдера.
+async function fetchCombinedWeather(lat,lon,provider){
+ const meteoRaw=await fetchWeather(lat,lon);
+ if(provider==='open-meteo')return meteoRaw;
+ const owmRaw=await fetchOpenWeatherMap(lat,lon);
+ return {...meteoRaw,hourly:buildHourlyFromOWM(owmRaw)};
+}
+
+async function searchCities(query){
+ const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8&language=ru`;
+ const res=await fetch(url);
+ if(!res.ok)throw new Error('Ошибка поиска города');
+ const data=await res.json();
+ return data.results||[];
+}
+
+function processWeatherData(raw,lat,lon,dayIndex=0){
+ const utcOffsetSeconds=raw.utc_offset_seconds||0;
+ const times=raw.hourly.time;
+ const temp=raw.hourly.temperature_2m;
+ const dew=raw.hourly.dew_point_2m;
+ const cloudTotal=raw.hourly.cloud_cover;
+ const cloudLow=raw.hourly.cloud_cover_low;
+ const cloudMid=raw.hourly.cloud_cover_mid;
+ const cloudHigh=raw.hourly.cloud_cover_high;
+ const windGusts=raw.hourly.wind_gusts_10m;
+
+ const day0=raw.daily.time[dayIndex];
+ const day1=raw.daily.time[dayIndex+1]||day0;
+
+ // Ночное окно: от заката дня day0 до восхода дня day1 (реальные UTC-моменты)
+ const sunsetStr=raw.daily.sunset[dayIndex];
+ const sunriseStr=raw.daily.sunrise[dayIndex+1]||raw.daily.sunrise[dayIndex];
+ const nightStartUTC=parseApiLocalToUTC(sunsetStr,utcOffsetSeconds);
+ const nightEndUTC=parseApiLocalToUTC(sunriseStr,utcOffsetSeconds);
+
+ const nightHours=[];
+ for(let i=0;i<times.length;i++){
+  const t=times[i]; // 'YYYY-MM-DDTHH:MM' локальное
+  const tUTC=parseApiLocalToUTC(t,utcOffsetSeconds);
+  if(tUTC>=nightStartUTC&&tUTC<=nightEndUTC){
+   nightHours.push({
+    time:t.slice(11,16),
+    datePart:t.slice(0,10),
+    temp_c:Math.round(temp[i]),
+    dew_point_c:Math.round(dew[i]),
+    clouds:{total:Math.round(cloudTotal[i]),low:Math.round(cloudLow[i]),mid:Math.round(cloudMid[i]),high:Math.round(cloudHigh[i])},
+    wind_ms:Math.round(windGusts[i]*10)/10, // wind_speed_unit=ms — уже в м/с
+    dew_warning:(temp[i]-dew[i])<2,
+    wind_warning:windGusts[i]>7
+   });
+  }
+ }
+
+ // Астрономические сумерки — точный расчёт положения Солнца
+ const scanStart=new Date(nightStartUTC.getTime()-2*3600000);
+ const scanEnd=new Date(nightEndUTC.getTime()+2*3600000);
+ const crossings=findSunCrossings(scanStart,scanEnd,lat,lon,[0,-6,-12,-18]);
+
+ function findEvent(threshold,direction){
+  return crossings.find(e=>e.threshold===threshold&&e.direction===direction);
+ }
+ const astroDusk=findEvent(-18,'falling');
+ const astroDawn=findEvent(-18,'rising');
+
+ // Луна: используем moonrise/moonset от API
+ const moonriseStr=raw.daily.moonrise[dayIndex];
+ const moonsetStr=raw.daily.moonset[dayIndex];
+ const moonriseStr2=raw.daily.moonrise[dayIndex+1];
+ const moonsetStr2=raw.daily.moonset[dayIndex+1];
+
+ // Собираем все известные интервалы "Луна над горизонтом" пересекающие ночь.
+ // Все моменты хранятся как настоящие UTC-instants (через parseApiLocalToUTC),
+ // чтобы их можно было напрямую сравнивать с astroDusk/astroDawn (тоже UTC).
+ const moonIntervals=[];
+ function addInterval(riseStr,setStr){
+  if(!riseStr&&!setStr)return;
+  const rise=riseStr?parseApiLocalToUTC(riseStr,utcOffsetSeconds):null;
+  const set=setStr?parseApiLocalToUTC(setStr,utcOffsetSeconds):null;
+  if(rise&&set){
+   if(set>rise)moonIntervals.push([rise,set]);
+   else{ // заход раньше восхода — значит луна была над горизонтом с начала суток до заката, и снова с восхода
+    moonIntervals.push([new Date(rise.getTime()-24*3600000),set]);
+    moonIntervals.push([rise,new Date(set.getTime()+24*3600000)]);
+   }
+  } else if(rise&&!set){
+   moonIntervals.push([rise,new Date(rise.getTime()+24*3600000)]);
+  } else if(!rise&&set){
+   moonIntervals.push([new Date(set.getTime()-24*3600000),set]);
+  }
+ }
+ addInterval(moonriseStr,moonsetStr);
+ addInterval(moonriseStr2,moonsetStr2);
+
+ let trueDarkWindow='Отсутствует';
+ let moonAlwaysUp=false;
+ if(astroDusk&&astroDawn){
+  const darkStart=astroDusk.time,darkEnd=astroDawn.time; // оба уже настоящие UTC Date
+  let coveredByMoon=false;
+  for(const [ms,me] of moonIntervals){
+   if(ms<=darkStart&&me>=darkEnd){coveredByMoon=true;break;}
+  }
+  if(coveredByMoon){
+   moonAlwaysUp=true;
+   trueDarkWindow=`Отсутствует — Луна над горизонтом всю ночь (${fmtHM(darkStart,utcOffsetSeconds)}–${fmtHM(darkEnd,utcOffsetSeconds)})`;
+  } else {
+   // Ищем наибольший подинтервал внутри [darkStart,darkEnd] свободный от Луны
+   const busy=moonIntervals.filter(([ms,me])=>me>darkStart&&ms<darkEnd).map(([ms,me])=>[ms>darkStart?ms:darkStart,me<darkEnd?me:darkEnd]).sort((a,b)=>a[0]-b[0]);
+   let freeSegments=[];
+   let cursor=darkStart;
+   for(const [bs,be] of busy){
+    if(bs>cursor)freeSegments.push([cursor,bs]);
+    if(be>cursor)cursor=be;
+   }
+   if(cursor<darkEnd)freeSegments.push([cursor,darkEnd]);
+   if(freeSegments.length===0){
+    trueDarkWindow='Отсутствует — Луна перекрывает всё окно астрономической темноты';
+   } else {
+    const best=freeSegments.reduce((a,b)=>(b[1]-b[0])>(a[1]-a[0])?b:a);
+    trueDarkWindow=`${fmtHM(best[0],utcOffsetSeconds)} – ${fmtHM(best[1],utcOffsetSeconds)}`;
+   }
+  }
+ } else {
+  trueDarkWindow='Не удалось определить (полярные условия или ошибка расчёта)';
+ }
+
+ // Фаза Луны
+ const moonPhaseFraction=raw.daily.moon_phase[dayIndex];
+ const moonPhaseText=moonPhaseLabel(moonPhaseFraction);
+
+ // Вердикт: доля часов ночи, пригодных для съёмки (низкая/средняя облачность < 30%)
+ const totalNightHours=nightHours.length;
+ const workingHoursCount=nightHours.filter(h=>h.clouds.low<30&&h.clouds.mid<30).length;
+ const coverage=totalNightHours>0?workingHoursCount/totalNightHours:0;
+
+ const anyHighCloud=nightHours.some(h=>h.clouds.high>40);
+ const anyDew=nightHours.some(h=>h.dew_warning);
+ const anyWind=nightHours.some(h=>h.wind_warning);
+ const strongWind=nightHours.some(h=>h.wind_ms>8);
+
+ const VERDICT_LEVELS=['Отлично','Хорошо','Приемлемо','Не подходит'];
+
+ let verdict;
+ if(coverage>0.8)verdict='Отлично';
+ else if(coverage>0.5)verdict='Хорошо';
+ else if(coverage>0.2)verdict='Приемлемо';
+ else verdict='Не подходит';
+
+ let verdictReason=`Чистое небо: ${workingHoursCount} из ${totalNightHours} часов`+(
+  coverage>0.8?' — почти вся ночь пригодна для съёмки.':
+  coverage>0.5?' — большая часть ночи пригодна для съёмки.':
+  coverage>0.2?' — лишь часть ночи пригодна для съёмки.':
+  ' — просветов недостаточно для съёмки.'
+ );
+ if(anyHighCloud)verdictReason+=' Высокая (перистая) облачность >40% — следи за небом.';
+
+ // Модификатор: риск росы понижает статус на одну ступень
+ if(anyDew){
+  const idx=VERDICT_LEVELS.indexOf(verdict);
+  verdict=VERDICT_LEVELS[Math.min(idx+1,VERDICT_LEVELS.length-1)];
+ }
+
+ // Модификатор: сильный ветер (>8 м/с) ограничивает статус не лучше "Приемлемо"
+ if(strongWind){
+  const idx=VERDICT_LEVELS.indexOf(verdict);
+  const capIdx=VERDICT_LEVELS.indexOf('Приемлемо');
+  if(idx<capIdx)verdict=VERDICT_LEVELS[capIdx];
+ }
+
+ if(moonAlwaysUp&&verdict==='Отлично'){
+  verdict='Приемлемо';
+  verdictReason+=' Луна не заходит за горизонт всю ночь — засветка для широкополосных объектов.';
+ }
+
+ const warnings=[];
+ if(anyHighCloud)warnings.push('Высокая облачность >40% — возможны более сильные просветы, чем ожидалось.');
+ if(anyDew)warnings.push('Высокий риск выпадения росы (разница температура/точка росы < 2°C). Не забудь про грелки! =)');
+ if(anyWind){
+  const maxGust=Math.max(...nightHours.map(h=>h.wind_ms));
+  warnings.push(`Сильный ветер, порывы до ${maxGust} м/с. Возможен срыв гидирования.`);
+ }
+ if(moonAlwaysUp)warnings.push('Луна над горизонтом всю ночь — Не забудь фильтры от засветки =)');
+
+ return {
+  summary:{verdict,verdict_reason:verdictReason,true_dark_window:trueDarkWindow,moon_phase:moonPhaseText},
+  warnings,
+  hourly_forecast:nightHours,
+  night_date:day0,
+  next_date:day1,
+  sunset_str:sunsetStr?sunsetStr.slice(11,16):'',
+  sunrise_str:sunriseStr?sunriseStr.slice(11,16):''
+ };
+}
+
+function setWeatherLoading(isLoading){
+ const el=document.querySelector('#weather-loading');
+ if(el)el.classList.toggle('hidden',!isLoading);
+ const gpsBtn=document.querySelector('#gps-btn');
+ const citySearch=document.querySelector('#city-search');
+ if(gpsBtn)gpsBtn.disabled=isLoading;
+ if(citySearch)citySearch.disabled=isLoading;
+}
+
+function renderWeatherError(message){
+ weatherRaw=null;
+ weatherCoords=null;
+ const daySel=document.querySelector('#weather-day-selector');
+ if(daySel)daySel.innerHTML='';
+ document.querySelector('#weather-summary').innerHTML=`<section class="rounded-2xl border border-red-500/30 bg-red-500/10 p-5"><h3 class="text-lg font-medium text-red-300">Ошибка загрузки прогноза</h3><p class="mt-2 text-sm text-neutral-400">${message}</p><button id="weather-retry" type="button" class="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-xs text-red-300 hover:bg-red-500/20">Повторить</button></section>`;
+ document.querySelector('#weather-warnings').innerHTML='';
+ document.querySelector('#weather-hourly').innerHTML='';
+ const retryBtn=document.querySelector('#weather-retry');
+ if(retryBtn)retryBtn.onclick=()=>{
+  const stored=JSON.parse(localStorage.getItem('weatherLocation')||'null');
+  if(stored)loadWeather(stored.lat,stored.lon,stored.name);
+  else loadWeather(CITY_PRESETS[0].lat,CITY_PRESETS[0].lon,CITY_PRESETS[0].name);
+ };
+}
+
+async function loadWeather(lat,lon,name){
+ const requestId=++weatherRequestId;
+ setWeatherLoading(true);
+ const nameEl=document.querySelector('#weather-location-name');
+ const metaEl=document.querySelector('#weather-location-meta');
+ if(nameEl)nameEl.textContent=name||'Выбранная точка';
+ if(metaEl)metaEl.textContent=`${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+ try{
+  const raw=await fetchCombinedWeather(lat,lon,weatherProvider);
+  if(requestId!==weatherRequestId)return; // устаревший запрос — игнорируем
+  weatherRaw=raw;
+  weatherCoords={lat,lon};
+  weatherDayIndex=0;
+  renderDaySelector();
+  const processed=processWeatherData(raw,lat,lon,weatherDayIndex);
+  weatherData=processed;
+  renderWeather();
+  localStorage.setItem('weatherLocation',JSON.stringify({lat,lon,name:name||'Выбранная точка'}));
+ }catch(err){
+  if(requestId!==weatherRequestId)return;
+  console.error('Ошибка загрузки погоды:',err);
+  renderWeatherError(err.message||'Проверьте соединение с интернетом.');
+ }finally{
+  if(requestId===weatherRequestId)setWeatherLoading(false);
+ }
+}
+
+function renderProviderSelector(){
+ const container=document.querySelector('#weather-provider-selector');
+ if(!container)return;
+ container.querySelectorAll('.provider-btn').forEach(btn=>{
+  const active=btn.dataset.provider===weatherProvider;
+  btn.classList.toggle('bg-blue-500',active);
+  btn.classList.toggle('text-white',active);
+  btn.classList.toggle('text-neutral-500',!active);
+ });
+}
+
+function initProviderSelector(){
+ const container=document.querySelector('#weather-provider-selector');
+ if(!container)return;
+ renderProviderSelector();
+ container.querySelectorAll('.provider-btn').forEach(btn=>{
+  btn.onclick=()=>{
+   if(weatherProvider===btn.dataset.provider)return;
+   weatherProvider=btn.dataset.provider;
+   localStorage.setItem('weatherProvider',weatherProvider);
+   renderProviderSelector();
+   const stored=JSON.parse(localStorage.getItem('weatherLocation')||'null');
+   if(weatherCoords)loadWeather(weatherCoords.lat,weatherCoords.lon,document.querySelector('#weather-location-name')?.textContent);
+   else if(stored)loadWeather(stored.lat,stored.lon,stored.name);
+   else loadWeather(CITY_PRESETS[0].lat,CITY_PRESETS[0].lon,CITY_PRESETS[0].name);
+  };
+ });
+}
+
+function renderDaySelector(){
+ const container=document.querySelector('#weather-day-selector');
+ if(!container||!weatherRaw)return;
+ const dayLabels=['Сегодня','Завтра','Послезавтра'];
+ const days=weatherRaw.daily.time.slice(0,3);
+ container.innerHTML=days.map((d,i)=>`<button type="button" data-day="${i}" class="weather-day-btn flex-1 rounded-xl border px-3 py-2 text-xs transition ${i===weatherDayIndex?'border-blue-500/70 bg-blue-500/10 text-blue-300':'border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-blue-500/40'}"><span class="block font-medium">${dayLabels[i]||formatDateRu(d)}</span><span class="block text-[10px] text-neutral-500">${formatDateRu(d)}</span></button>`).join('');
+ container.querySelectorAll('.weather-day-btn').forEach(btn=>{
+  btn.onclick=()=>selectWeatherDay(Number(btn.dataset.day));
+ });
+}
+
+function selectWeatherDay(dayIndex){
+ if(!weatherRaw||!weatherCoords)return;
+ weatherDayIndex=dayIndex;
+ renderDaySelector();
+ weatherData=processWeatherData(weatherRaw,weatherCoords.lat,weatherCoords.lon,weatherDayIndex);
+ renderWeather();
+}
+
+function renderCityPresets(){
+ const container=document.querySelector('#city-presets');
+ if(!container)return;
+ container.innerHTML=CITY_PRESETS.map(c=>`<button type="button" data-lat="${c.lat}" data-lon="${c.lon}" data-name="${c.name}" class="city-preset-btn shrink-0 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs text-neutral-400 transition hover:border-blue-500/70 hover:text-blue-300">${c.name}</button>`).join('');
+ container.querySelectorAll('.city-preset-btn').forEach(btn=>{
+  btn.onclick=()=>loadWeather(Number(btn.dataset.lat),Number(btn.dataset.lon),btn.dataset.name);
+ });
+}
+
+let citySearchTimer=null;
+function initCitySearch(){
+ const input=document.querySelector('#city-search');
+ const results=document.querySelector('#city-results');
+ if(!input||!results)return;
+ input.addEventListener('input',()=>{
+  const query=input.value.trim();
+  clearTimeout(citySearchTimer);
+  if(query.length<2){results.classList.add('hidden');results.innerHTML='';return;}
+  citySearchTimer=setTimeout(async()=>{
+   try{
+    const found=await searchCities(query);
+    if(!found.length){results.innerHTML='<p class="p-3 text-xs text-neutral-500">Города не найдены</p>';results.classList.remove('hidden');return;}
+    results.innerHTML=found.map(c=>{
+     const region=[c.admin1,c.country].filter(Boolean).join(', ');
+     return `<button type="button" data-lat="${c.latitude}" data-lon="${c.longitude}" data-name="${c.name}" class="city-result-btn flex w-full flex-col items-start px-4 py-2 text-left text-sm hover:bg-neutral-900"><span>${c.name}</span><span class="text-[11px] text-neutral-500">${region}</span></button>`;
+    }).join('');
+    results.classList.remove('hidden');
+    results.querySelectorAll('.city-result-btn').forEach(btn=>{
+     btn.onclick=()=>{
+      loadWeather(Number(btn.dataset.lat),Number(btn.dataset.lon),btn.dataset.name);
+      results.classList.add('hidden');
+      input.value=btn.dataset.name;
+     };
+    });
+   }catch(err){
+    results.innerHTML=`<p class="p-3 text-xs text-red-400">Ошибка поиска: ${err.message}</p>`;
+    results.classList.remove('hidden');
+   }
+  },350);
+ });
+ document.addEventListener('click',e=>{
+  if(!results.contains(e.target)&&e.target!==input)results.classList.add('hidden');
+ });
+}
+
+function getGPSPosition(){
+ return new Promise((resolve,reject)=>{
+  if(!navigator.geolocation){reject(new Error('Геолокация не поддерживается этим браузером.'));return;}
+  navigator.geolocation.getCurrentPosition(
+   pos=>resolve({lat:pos.coords.latitude,lon:pos.coords.longitude}),
+   err=>reject(err),
+   {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+  );
+ });
+}
+
+function initGPSButton(){
+ const btn=document.querySelector('#gps-btn');
+ if(!btn)return;
+ if(!navigator.geolocation){
+  btn.disabled=true;
+  btn.title='Геолокация не поддерживается';
+  return;
+ }
+ if(location.protocol!=='https:'&&location.hostname!=='localhost'){
+  btn.title='Требуется HTTPS для геолокации';
+ }
+ btn.onclick=async()=>{
+  try{
+   const {lat,lon}=await getGPSPosition();
+   await loadWeather(lat,lon,`GPS (${lat.toFixed(2)}, ${lon.toFixed(2)})`);
+  }catch(err){
+   let msg='Не удалось определить местоположение.';
+   if(err.code===1)msg='Доступ к геолокации запрещён. Разрешите доступ в настройках браузера.';
+   else if(err.code===3)msg='Превышено время ожидания GPS.';
+   renderWeatherError(msg);
+   setWeatherLoading(false);
+  }
+ };
+}
+
+function initWeatherSection(){
+ renderCityPresets();
+ initCitySearch();
+ initGPSButton();
+ initProviderSelector();
+ const stored=JSON.parse(localStorage.getItem('weatherLocation')||'null');
+ if(stored&&typeof stored.lat==='number'&&typeof stored.lon==='number'){
+  loadWeather(stored.lat,stored.lon,stored.name);
+ } else {
+  loadWeather(CITY_PRESETS[0].lat,CITY_PRESETS[0].lon,CITY_PRESETS[0].name);
+  if(navigator.geolocation&&(location.protocol==='https:'||location.hostname==='localhost')){
+   navigator.geolocation.getCurrentPosition(
+    pos=>{loadWeather(pos.coords.latitude,pos.coords.longitude,`GPS (${pos.coords.latitude.toFixed(2)}, ${pos.coords.longitude.toFixed(2)})`);},
+    ()=>{/* тихо игнорируем отказ при автозапуске */},
+    {enableHighAccuracy:true,timeout:8000,maximumAge:300000}
+   );
+  }
+ }
+}
+initWeatherSection();
+
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('SW registration failed:',err));
+ });
+}
+</script>
+</body></html>

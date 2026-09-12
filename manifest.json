@@ -1,0 +1,33 @@
+{
+  "name": "PashAstro v2",
+  "short_name": "PashAstro",
+  "description": "Астрофото трекер - приложение для отслеживания сессий астрофотографии",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait-primary",
+  "lang": "ru",
+  "categories": ["astronomy", "photography", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%23000000' width='192' height='192'/%3E%3Ccircle cx='96' cy='96' r='78' fill='%231a1a1a' stroke='%233b82f6' stroke-width='4'/%3E%3Ccircle cx='96' cy='96' r='34' fill='%233b82f6'/%3E%3Ccircle cx='60' cy='55' r='4' fill='%23fff'/%3E%3Ccircle cx='140' cy='70' r='3' fill='%2360a5fa'/%3E%3Ccircle cx='130' cy='140' r='3' fill='%23fff'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%23000000' width='512' height='512'/%3E%3Ccircle cx='256' cy='256' r='208' fill='%231a1a1a' stroke='%233b82f6' stroke-width='10'/%3E%3Ccircle cx='256' cy='256' r='90' fill='%233b82f6'/%3E%3Ccircle cx='160' cy='146' r='10' fill='%23fff'/%3E%3Ccircle cx='373' cy='186' r='8' fill='%2360a5fa'/%3E%3Ccircle cx='346' cy='373' r='8' fill='%23fff'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%23000000' width='512' height='512' rx='90'/%3E%3Ccircle cx='256' cy='256' r='170' fill='%231a1a1a' stroke='%233b82f6' stroke-width='10'/%3E%3Ccircle cx='256' cy='256' r='80' fill='%233b82f6'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
