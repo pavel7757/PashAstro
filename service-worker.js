@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pashastro-v2-cache-v1';
+const CACHE_NAME = 'pashastro-v2-cache-v2';
 const OFFLINE_URLS = [
   './',
   './index.html',
